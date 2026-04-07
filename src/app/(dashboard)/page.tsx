@@ -446,7 +446,7 @@ export default function DashboardPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-amber-700 to-amber-900 text-white">
+      <section className="py-20 px-4 bg-amber-900 text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Ready to Transform Your Coffee Business?
