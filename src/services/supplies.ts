@@ -12,3 +12,6 @@ export const createSupplyItem = (data: Partial<SupplyItem>) =>
 
 export const updateSupplyItem = (id: string, data: Partial<SupplyItem>) =>
   api.put<SupplyItem>(`/supplies/${id}`, data).then((r) => r.data)
+
+export const deleteSupplyItem = (id: string) =>
+  api.delete(`/supplies/${id}`)

@@ -80,3 +80,31 @@ export async function PUT(
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { session, error } = await requireSession()
+  if (error) return error
+
+  const roleError = requireRole(session!, ['SUPER_ADMIN', 'FINANCE_MANAGER'])
+  if (roleError) return roleError
+
+  const { id } = await params
+
+  try {
+    const existing = await prisma.payment.findUnique({ where: { id } })
+    if (!existing) return Response.json({ error: 'Not found' }, { status: 404 })
+
+    if (existing.executedAt !== null) {
+      return Response.json({ error: 'Cannot delete an already executed payment' }, { status: 409 })
+    }
+
+    await prisma.payment.delete({ where: { id } })
+    return new Response(null, { status: 204 })
+  } catch (e) {
+    console.error(e)
+    return Response.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

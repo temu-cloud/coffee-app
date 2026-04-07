@@ -9,9 +9,10 @@ interface SupplyTableProps {
   items: SupplyItem[]
   loading?: boolean
   onEdit: (item: SupplyItem) => void
+  onDelete: (item: SupplyItem) => void
 }
 
-export default function SupplyTable({ items, loading, onEdit }: SupplyTableProps) {
+export default function SupplyTable({ items, loading, onEdit, onDelete }: SupplyTableProps) {
   const { data: session } = useSession()
   const role = session?.user?.role
   const canManage = role === 'SUPER_ADMIN' || role === 'FACILITY_MANAGER'
@@ -29,7 +30,10 @@ export default function SupplyTable({ items, loading, onEdit }: SupplyTableProps
       header: 'Actions',
       render: (row) =>
         canManage ? (
-          <Button size="sm" variant="secondary" onClick={() => onEdit(row)}>Edit</Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={() => onEdit(row)}>Edit</Button>
+            <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>Delete</Button>
+          </div>
         ) : null,
     },
   ]

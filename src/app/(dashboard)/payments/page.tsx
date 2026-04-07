@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import { useSession } from '@/lib/auth-client'
-import { usePayments, useCreatePayment, useExecutePayment } from '@/hooks/usePayments'
+import { usePayments, useCreatePayment, useExecutePayment, useDeletePayment } from '@/hooks/usePayments'
 import PaymentFilters from '@/components/payments/PaymentFilters'
 import PaymentTable from '@/components/payments/PaymentTable'
 import PaymentForm from '@/components/payments/PaymentForm'
@@ -22,17 +22,15 @@ export default function PaymentsPage() {
   const [executed, setExecuted] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [executeTarget, setExecuteTarget] = useState<Payment | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Payment | null>(null)
 
   const executedParam = executed === 'true' ? true : executed === 'false' ? false : undefined
   const { data, isLoading } = usePayments({ from: from || undefined, to: to || undefined, executed: executedParam, page: 1, pageSize: 50 })
   const createMutation = useCreatePayment()
   const executeMutation = useExecutePayment()
+  const deleteMutation = useDeletePayment()
 
-  const handleFilter = useCallback((f: string, t: string, e: string) => {
-    setFrom(f)
-    setTo(t)
-    setExecuted(e)
-  }, [])
+  const handleFilter = useCallback((f: string, t: string, e: string) => { setFrom(f); setTo(t); setExecuted(e) }, [])
 
   async function handleFormSubmit(data: Partial<Payment>) {
     try {
@@ -40,8 +38,7 @@ export default function PaymentsPage() {
       toast('Payment added successfully')
       setFormOpen(false)
     } catch (e: unknown) {
-      const err = e as { message?: string }
-      toast(err.message ?? 'Something went wrong', 'error')
+      toast((e as { message?: string }).message ?? 'Something went wrong', 'error')
     }
   }
 
@@ -52,8 +49,18 @@ export default function PaymentsPage() {
       toast('Payment executed successfully')
       setExecuteTarget(null)
     } catch (e: unknown) {
-      const err = e as { message?: string }
-      toast(err.message ?? 'Could not execute payment', 'error')
+      toast((e as { message?: string }).message ?? 'Could not execute payment', 'error')
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id)
+      toast('Payment deleted')
+      setDeleteTarget(null)
+    } catch (e: unknown) {
+      toast((e as { message?: string }).message ?? 'Could not delete', 'error')
     }
   }
 
@@ -66,15 +73,11 @@ export default function PaymentsPage() {
         </div>
         {canCreate && <Button onClick={() => setFormOpen(true)}>+ Add Payment</Button>}
       </div>
-
       <PaymentFilters onFilter={handleFilter} />
-
-      <PaymentTable payments={data?.data ?? []} loading={isLoading} onExecute={setExecuteTarget} />
-
+      <PaymentTable payments={data?.data ?? []} loading={isLoading} onExecute={setExecuteTarget} onDelete={setDeleteTarget} />
       <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Add Payment">
         <PaymentForm onSubmit={handleFormSubmit} loading={createMutation.isPending} />
       </Modal>
-
       <Modal open={!!executeTarget} onClose={() => setExecuteTarget(null)} title="Execute Payment" size="sm">
         <p className="text-amber-800 mb-6">
           Execute payment of <strong>{executeTarget?.amount}</strong> to <strong>{executeTarget?.payee}</strong>?
@@ -82,6 +85,13 @@ export default function PaymentsPage() {
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setExecuteTarget(null)}>Cancel</Button>
           <Button loading={executeMutation.isPending} onClick={handleExecute}>Confirm Execute</Button>
+        </div>
+      </Modal>
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Payment" size="sm">
+        <p className="text-amber-800 mb-6">Delete payment to <strong>{deleteTarget?.payee}</strong>? This cannot be undone.</p>
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button variant="destructive" loading={deleteMutation.isPending} onClick={handleDelete}>Delete</Button>
         </div>
       </Modal>
     </div>

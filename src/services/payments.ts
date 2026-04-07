@@ -15,3 +15,6 @@ export const updatePayment = (id: string, data: Partial<Payment>) =>
 
 export const executePayment = (id: string) =>
   api.post<Payment>(`/payments/${id}/execute`).then((r) => r.data)
+
+export const deletePayment = (id: string) =>
+  api.delete(`/payments/${id}`)

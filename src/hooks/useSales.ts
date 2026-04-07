@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getSales, createSale } from '@/services/sales'
+import { getSales, createSale, deleteSale } from '@/services/sales'
 import type { DailySale, SaleQuery } from '@/types'
 
 export const useSales = (params?: SaleQuery) =>
@@ -16,6 +16,17 @@ export const useCreateSale = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sales'] })
       qc.invalidateQueries({ queryKey: ['inventory'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export const useDeleteSale = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteSale(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sales'] })
       qc.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })

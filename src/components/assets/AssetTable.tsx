@@ -10,6 +10,7 @@ interface AssetTableProps {
   assets: Asset[]
   loading?: boolean
   onEdit: (asset: Asset) => void
+  onDelete: (asset: Asset) => void
 }
 
 const conditionVariant: Record<AssetCondition, 'success' | 'info' | 'warning' | 'danger'> = {
@@ -19,7 +20,7 @@ const conditionVariant: Record<AssetCondition, 'success' | 'info' | 'warning' | 
   POOR: 'danger',
 }
 
-export default function AssetTable({ assets, loading, onEdit }: AssetTableProps) {
+export default function AssetTable({ assets, loading, onEdit, onDelete }: AssetTableProps) {
   const { data: session } = useSession()
   const role = session?.user?.role
   const canManage = role === 'SUPER_ADMIN' || role === 'FACILITY_MANAGER'
@@ -44,7 +45,10 @@ export default function AssetTable({ assets, loading, onEdit }: AssetTableProps)
       header: 'Actions',
       render: (row) =>
         canManage ? (
-          <Button size="sm" variant="secondary" onClick={() => onEdit(row)}>Edit</Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={() => onEdit(row)}>Edit</Button>
+            <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>Delete</Button>
+          </div>
         ) : null,
     },
   ]

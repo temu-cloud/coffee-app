@@ -14,11 +14,12 @@ interface BudgetTableProps {
   budgets: EnrichedBudget[]
   loading?: boolean
   onEdit: (budget: EnrichedBudget) => void
+  onDelete: (budget: EnrichedBudget) => void
 }
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export default function BudgetTable({ budgets, loading, onEdit }: BudgetTableProps) {
+export default function BudgetTable({ budgets, loading, onEdit, onDelete }: BudgetTableProps) {
   const { data: session } = useSession()
   const role = session?.user?.role
   const canManage = role === 'SUPER_ADMIN' || role === 'FINANCE_MANAGER'
@@ -75,7 +76,10 @@ export default function BudgetTable({ budgets, loading, onEdit }: BudgetTablePro
                 </td>
                 {canManage && (
                   <td className="px-4 py-3">
-                    <Button size="sm" variant="secondary" onClick={() => onEdit(budget)}>Edit</Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => onEdit(budget)}>Edit</Button>
+                      <Button size="sm" variant="destructive" onClick={() => onDelete(budget)}>Delete</Button>
+                    </div>
                   </td>
                 )}
               </tr>

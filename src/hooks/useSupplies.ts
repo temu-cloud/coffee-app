@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getSupplyItems, createSupplyItem, updateSupplyItem } from '@/services/supplies'
+import { getSupplyItems, createSupplyItem, updateSupplyItem, deleteSupplyItem } from '@/services/supplies'
 import type { SupplyItem, SupplyQuery } from '@/types'
 
 export const useSupplyItems = (params?: SupplyQuery) =>
@@ -27,5 +27,13 @@ export const useUpdateSupplyItem = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['supplies'] })
     },
+  })
+}
+
+export const useDeleteSupplyItem = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteSupplyItem(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['supplies'] }),
   })
 }

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getBudgets, createBudget, updateBudget } from '@/services/budgets'
+import { getBudgets, createBudget, updateBudget, deleteBudget } from '@/services/budgets'
 import type { Budget, BudgetQuery } from '@/types'
 
 export const useBudgets = (params?: BudgetQuery) =>
@@ -26,5 +26,13 @@ export const useUpdateBudget = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['budgets'] })
     },
+  })
+}
+
+export const useDeleteBudget = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteBudget(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['budgets'] }),
   })
 }

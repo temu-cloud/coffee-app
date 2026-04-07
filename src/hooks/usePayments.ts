@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getPayments, createPayment, updatePayment, executePayment } from '@/services/payments'
+import { getPayments, createPayment, updatePayment, executePayment, deletePayment } from '@/services/payments'
 import type { Payment, PaymentQuery } from '@/types'
 
 export const usePayments = (params?: PaymentQuery) =>
@@ -35,6 +35,17 @@ export const useExecutePayment = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => executePayment(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export const useDeletePayment = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deletePayment(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] })
       qc.invalidateQueries({ queryKey: ['dashboard'] })

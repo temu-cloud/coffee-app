@@ -12,3 +12,6 @@ export const createBudget = (data: Partial<Budget>) =>
 
 export const updateBudget = (id: string, data: Partial<Budget>) =>
   api.put<Budget>(`/budgets/${id}`, data).then((r) => r.data)
+
+export const deleteBudget = (id: string) =>
+  api.delete(`/budgets/${id}`)

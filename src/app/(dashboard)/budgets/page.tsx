@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSession } from '@/lib/auth-client'
-import { useBudgets, useCreateBudget, useUpdateBudget } from '@/hooks/useBudgets'
+import { useBudgets, useCreateBudget, useUpdateBudget, useDeleteBudget } from '@/hooks/useBudgets'
 import BudgetForm from '@/components/budgets/BudgetForm'
 import BudgetTable from '@/components/budgets/BudgetTable'
 import Modal from '@/components/ui/Modal'
@@ -23,23 +23,17 @@ export default function BudgetsPage() {
 
   const [formOpen, setFormOpen] = useState(false)
   const [editBudget, setEditBudget] = useState<EnrichedBudget | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<EnrichedBudget | null>(null)
 
   const { data, isLoading } = useBudgets()
   const createMutation = useCreateBudget()
   const updateMutation = useUpdateBudget()
+  const deleteMutation = useDeleteBudget()
 
-  // API returns array directly (not paginated)
   const budgets: EnrichedBudget[] = Array.isArray(data) ? data : (data as { data?: EnrichedBudget[] })?.data ?? []
 
-  function openAdd() {
-    setEditBudget(null)
-    setFormOpen(true)
-  }
-
-  function openEdit(budget: EnrichedBudget) {
-    setEditBudget(budget)
-    setFormOpen(true)
-  }
+  function openAdd() { setEditBudget(null); setFormOpen(true) }
+  function openEdit(budget: EnrichedBudget) { setEditBudget(budget); setFormOpen(true) }
 
   async function handleFormSubmit(data: Partial<Budget>) {
     try {
@@ -52,12 +46,20 @@ export default function BudgetsPage() {
       }
       setFormOpen(false)
     } catch (e: unknown) {
-      const err = e as { message?: string }
-      toast(err.message ?? 'Something went wrong', 'error')
+      toast((e as { message?: string }).message ?? 'Something went wrong', 'error')
     }
   }
 
-  const isFormLoading = createMutation.isPending || updateMutation.isPending
+  async function handleDelete() {
+    if (!deleteTarget) return
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id)
+      toast('Budget deleted')
+      setDeleteTarget(null)
+    } catch (e: unknown) {
+      toast((e as { message?: string }).message ?? 'Could not delete', 'error')
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -68,11 +70,16 @@ export default function BudgetsPage() {
         </div>
         {canManage && <Button onClick={openAdd}>+ Add Budget</Button>}
       </div>
-
-      <BudgetTable budgets={budgets} loading={isLoading} onEdit={openEdit} />
-
+      <BudgetTable budgets={budgets} loading={isLoading} onEdit={openEdit} onDelete={setDeleteTarget} />
       <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editBudget ? 'Edit Budget' : 'Add Budget'}>
-        <BudgetForm budget={editBudget} onSubmit={handleFormSubmit} loading={isFormLoading} />
+        <BudgetForm budget={editBudget} onSubmit={handleFormSubmit} loading={createMutation.isPending || updateMutation.isPending} />
+      </Modal>
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Budget" size="sm">
+        <p className="text-amber-800 mb-6">Delete budget for <strong>{deleteTarget?.category}</strong>? This cannot be undone.</p>
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button variant="destructive" loading={deleteMutation.isPending} onClick={handleDelete}>Delete</Button>
+        </div>
       </Modal>
     </div>
   )

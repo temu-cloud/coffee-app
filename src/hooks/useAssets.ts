@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getAssets, createAsset, updateAsset } from '@/services/assets'
+import { getAssets, createAsset, updateAsset, deleteAsset } from '@/services/assets'
 import type { Asset, AssetQuery } from '@/types'
 
 export const useAssets = (params?: AssetQuery) =>
@@ -26,5 +26,13 @@ export const useUpdateAsset = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['assets'] })
     },
+  })
+}
+
+export const useDeleteAsset = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteAsset(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['assets'] }),
   })
 }

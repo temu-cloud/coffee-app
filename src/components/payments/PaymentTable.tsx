@@ -10,9 +10,10 @@ interface PaymentTableProps {
   payments: Payment[]
   loading?: boolean
   onExecute: (payment: Payment) => void
+  onDelete: (payment: Payment) => void
 }
 
-export default function PaymentTable({ payments, loading, onExecute }: PaymentTableProps) {
+export default function PaymentTable({ payments, loading, onExecute, onDelete }: PaymentTableProps) {
   const { data: session } = useSession()
   const role = session?.user?.role
   const canExecute = role === 'SUPER_ADMIN' || role === 'FINANCE_MANAGER'
@@ -42,8 +43,15 @@ export default function PaymentTable({ payments, loading, onExecute }: PaymentTa
       key: 'actions',
       header: 'Actions',
       render: (row) =>
-        !row.executedAt && canExecute ? (
-          <Button size="sm" variant="primary" onClick={() => onExecute(row)}>Execute</Button>
+        canExecute ? (
+          <div className="flex gap-2">
+            {!row.executedAt && (
+              <Button size="sm" variant="primary" onClick={() => onExecute(row)}>Execute</Button>
+            )}
+            {!row.executedAt && (
+              <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>Delete</Button>
+            )}
+          </div>
         ) : null,
     },
   ]

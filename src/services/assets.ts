@@ -12,3 +12,6 @@ export const createAsset = (data: Partial<Asset>) =>
 
 export const updateAsset = (id: string, data: Partial<Asset>) =>
   api.put<Asset>(`/assets/${id}`, data).then((r) => r.data)
+
+export const deleteAsset = (id: string) =>
+  api.delete(`/assets/${id}`)

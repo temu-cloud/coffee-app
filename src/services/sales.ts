@@ -9,3 +9,6 @@ export const getSale = (id: string) =>
 
 export const createSale = (data: Partial<DailySale>) =>
   api.post<DailySale>('/sales', data).then((r) => r.data)
+
+export const deleteSale = (id: string) =>
+  api.delete(`/sales/${id}`)

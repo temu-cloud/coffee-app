@@ -9,3 +9,6 @@ export const getExpense = (id: string) =>
 
 export const createExpense = (data: Partial<DailyExpense>) =>
   api.post<DailyExpense>('/expenses', data).then((r) => r.data)
+
+export const deleteExpense = (id: string) =>
+  api.delete(`/expenses/${id}`)
