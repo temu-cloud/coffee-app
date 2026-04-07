@@ -97,7 +97,13 @@ function SidebarContent({ onClose }: SidebarProps) {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-amber-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">{<FiCoffee className="w-5 h-5 text-bold text-amber-100" />}</span>
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+            <img
+              src="/dd.png"
+              alt="Damot Coffee Logo"
+              className="w-5 h-5 object-contain"
+            />
+          </div>
           <div>
             <p className="text-white font-bold text-sm leading-tight">Damot Coffee</p>
             <p className="text-amber-300 text-xs">Management System</p>
@@ -119,11 +125,10 @@ function SidebarContent({ onClose }: SidebarProps) {
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
                   ? 'bg-amber-700 text-white'
                   : 'text-amber-200 hover:bg-amber-800 hover:text-white'
-              }`}
+                }`}
             >
               <span className="text-base">{item.icon}</span>
               {item.label}
@@ -138,9 +143,8 @@ function SidebarContent({ onClose }: SidebarProps) {
           <div className="mb-3 px-2">
             <p className="text-white text-sm font-medium truncate">{session.user.name}</p>
             <p className="text-amber-400 text-xs truncate">{session.user.email}</p>
-            <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${
-              ROLE_BADGE[role ?? ''] ?? 'bg-amber-800 text-amber-300'
-            }`}>
+            <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[role ?? ''] ?? 'bg-amber-800 text-amber-300'
+              }`}>
               {role === 'NO_ROLE' ? 'Pending Role' : (role ?? 'Unknown')}
             </span>
           </div>
@@ -180,9 +184,8 @@ export default function Sidebar() {
 
       {/* Mobile drawer */}
       <aside
-        className={`fixed left-0 top-0 h-full w-64 bg-amber-900 z-50 transform transition-transform duration-300 lg:hidden ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed left-0 top-0 h-full w-64 bg-amber-900 z-50 transform transition-transform duration-300 lg:hidden ${mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <SidebarContent onClose={() => setMobileOpen(false)} />
       </aside>

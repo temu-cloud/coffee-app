@@ -21,10 +21,16 @@ export default function Topbar() {
           <h1 className="text-lg md:text-xl font-bold text-amber-900">{title}</h1>
           <p className="text-xs text-amber-500 hidden sm:block">Coffee Shop Inventory Management</p>
         </div>
-        
+
         <div className="flex items-center gap-2 text-amber-600 text-sm">
-          <span><FiCoffee className="w-5 h-5" /></span>
-          <span className="hidden sm:inline">Good day!</span>
+          <div className="w-8 h-8 bg-amber-800 rounded-full flex items-center justify-center">
+            <img
+              src="/d.png"
+              alt="Coffee Icon"
+              className="w-5 h-5 object-contain"
+            />
+          </div>
+          <span className="hidden sm:inline text-amber-700">Good day!</span>
         </div>
       </div>
     </header>
