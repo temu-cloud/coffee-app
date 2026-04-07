@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { FaCoffee, FaArrowRight, FaChartLine, FaBoxes, FaUsers, FaLeaf, FaMugHot, FaStore, FaTruck, FaHeart } from 'react-icons/fa'
+import { FaCoffee, FaArrowRight, FaChartLine, FaBoxes, FaUsers,FaHeart, FaUser } from 'react-icons/fa'
 import { FiClock } from 'react-icons/fi'
 import { useSession } from '@/lib/auth-client'
 import { useDashboard } from '@/hooks/useDashboard'
@@ -9,6 +9,7 @@ import LowStockTable from '@/components/dashboard/LowStockTable'
 import UsageChart from '@/components/dashboard/UsageChart'
 import Skeleton from '@/components/ui/Skeleton'
 import { FiAlertTriangle, FiBell, FiDollarSign, FiTrendingDown, FiTrendingUp } from 'react-icons/fi'
+import Image from 'next/image'
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { data, isLoading } = useDashboard()
@@ -92,7 +93,7 @@ export default function DashboardPage() {
           <StatsCard
             title="Pending Payments"
             value={data?.pendingPaymentsCount}
-            icon="🔔"
+            icon={<FiBell className="w-5 h-5 text-blue-600" />}
             variant={data?.pendingPaymentsCount ? 'warning' : 'default'}
             loading={isLoading}
           />
@@ -355,11 +356,15 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition duration-300">
-              <img
-                src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?q=80&w=2070&auto=format&fit=crop"
-                alt="Coffee brewing"
-                className="w-full h-48 object-cover"
-              />
+              <div className="relative h-48 w-full">
+                <Image
+                  src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?q=80&w=2070&auto=format&fit=crop"
+                  alt="Coffee brewing"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
               <div className="p-6">
                 <div className="flex items-center gap-2 text-sm text-amber-600 mb-2">
                   <FiClock className="w-4 h-4" />
@@ -374,11 +379,15 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition duration-300">
-              <img
-                src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=2069&auto=format&fit=crop"
-                alt="Coffee shop"
-                className="w-full h-48 object-cover"
-              />
+              <div className="relative h-48 w-full">
+                <Image
+                  src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=2069&auto=format&fit=crop"
+                  alt="Coffee shop"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
               <div className="p-6">
                 <div className="flex items-center gap-2 text-sm text-amber-600 mb-2">
                   <FiClock className="w-4 h-4" />
@@ -393,11 +402,15 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition duration-300">
-              <img
-                src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1974&auto=format&fit=crop"
-                alt="Coffee beans"
-                className="w-full h-48 object-cover"
-              />
+              <div className="relative h-48 w-full">
+                <Image
+                  src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1974&auto=format&fit=crop"
+                  alt="Coffee beans"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
               <div className="p-6">
                 <div className="flex items-center gap-2 text-sm text-amber-600 mb-2">
                   <FiClock className="w-4 h-4" />
@@ -419,15 +432,11 @@ export default function DashboardPage() {
         <div className="max-w-4xl mx-auto text-center">
           <FaHeart className="w-12 h-12 text-amber-400 mx-auto mb-6" />
           <p className="text-xl md:text-2xl text-gray-700 italic mb-8">
-            "This inventory system transformed how we manage our coffee shop.
-            We've reduced waste by 30% and increased profits significantly!"
+            This inventory system transformed how we manage our coffee shop.
+            We have reduced waste by 30% and increased profits significantly!
           </p>
           <div className="flex items-center justify-center gap-4">
-            <img
-              src="/userphoto.jpg"
-              alt="Customer"
-              className="w-12 h-12 rounded-full object-cover"
-            />
+            {<FaUser className='w-12 h-12 rounded-full object-cover'/>}
             <div className="text-left">
               <div className="font-semibold">Getaneh Alesew</div>
               <div className="text-sm text-gray-500">Owner of Damote Coffee</div>

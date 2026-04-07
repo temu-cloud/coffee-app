@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut, useSession } from '@/lib/auth-client'
-import { FiBarChart2, FiBox, FiBriefcase, FiCoffee, FiCreditCard, FiFileText, FiHardDrive, FiHome, FiLogOut, FiMenu, FiPackage, FiShoppingCart, FiTag, FiTrendingDown, FiTrendingUp, FiUsers, FiX } from 'react-icons/fi'
+import { FiBarChart2, FiBox, FiBriefcase, FiCreditCard, FiFileText, FiHardDrive, FiHome, FiLogOut, FiMenu, FiPackage, FiShoppingCart, FiTag, FiTrendingDown, FiTrendingUp, FiUsers, FiX } from 'react-icons/fi'
 import { useState } from 'react'
+import Image from 'next/image'
 
 type NavItem = { href: string; label: string; icon: React.ReactNode }
 
@@ -97,11 +98,14 @@ function SidebarContent({ onClose }: SidebarProps) {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-amber-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <img
+          <div className="w-8 h-8  bg-white rounded-full flex items-center justify-center">
+            <Image
               src="/dd.png"
               alt="Damot Coffee Logo"
-              className="w-5 h-5 object-contain"
+              width={40}
+              height={40}
+
+              className="h-5 w-5 object-contain"
             />
           </div>
           <div>
@@ -126,8 +130,8 @@ function SidebarContent({ onClose }: SidebarProps) {
               href={item.href}
               onClick={onClose}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
-                  ? 'bg-amber-700 text-white'
-                  : 'text-amber-200 hover:bg-amber-800 hover:text-white'
+                ? 'bg-amber-700 text-white'
+                : 'text-amber-200 hover:bg-amber-800 hover:text-white'
                 }`}
             >
               <span className="text-base">{item.icon}</span>

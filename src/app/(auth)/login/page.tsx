@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from '@/lib/auth-client'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -43,10 +44,12 @@ export default function LoginPage() {
         {/* Logo / Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-800 rounded-full mb-4">
-            <img
+            <Image
               src="/d.png"
               alt="Coffee Icon"
               className="w-10 h-10 object-contain"
+              width={40}
+              height={40}
             />
           </div>
           <h1 className="text-3xl font-bold text-amber-900">Dammote Coffee</h1>

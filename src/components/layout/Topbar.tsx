@@ -1,7 +1,8 @@
 'use client'
 
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { FiCoffee } from 'react-icons/fi'
+ 
 
 const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
@@ -24,10 +25,12 @@ export default function Topbar() {
 
         <div className="flex items-center gap-2 text-amber-600 text-sm">
           <div className="w-8 h-8 bg-amber-800 rounded-full flex items-center justify-center">
-            <img
+            <Image
               src="/d.png"
               alt="Coffee Icon"
               className="w-5 h-5 object-contain"
+              width={20}
+              height={20}
             />
           </div>
           <span className="hidden sm:inline text-amber-700">Good day!</span>

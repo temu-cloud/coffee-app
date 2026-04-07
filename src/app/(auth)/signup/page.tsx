@@ -1,5 +1,5 @@
 'use client'
-
+import Image from 'next/image'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -57,7 +57,13 @@ export default function SignUpPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-800 rounded-full mb-4">
-            <span className="text-3xl">☕</span>
+                        <Image
+                          src="/d.png"
+                          alt="Coffee Icon"
+                          className="w-10 h-10 object-contain"
+                          width={40}
+                          height={40}
+                        />
           </div>
           <h1 className="text-3xl font-bold text-amber-900">Create Account</h1>
           <p className="text-amber-700 mt-1">Join the Coffee Inventory team</p>
