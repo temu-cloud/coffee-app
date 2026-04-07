@@ -1,0 +1,313 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── BetterAuth required models ──────────────────────────────────────────────
+
+model user {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  role          String    @default("NO_ROLE")
+
+  sessions     session[]
+  accounts     account[]
+  transactions Transaction[]
+  permissions  StaffPermission?
+
+  // InventoryItem relations
+  inventoryCreated  InventoryItem[] @relation("InventoryCreatedBy")
+  inventoryUpdated  InventoryItem[] @relation("InventoryUpdatedBy")
+  inventoryDeleted  InventoryItem[] @relation("InventoryDeletedBy")
+
+  // SupplyItem relations
+  supplyCreated     SupplyItem[]    @relation("SupplyCreatedBy")
+  supplyUpdated     SupplyItem[]    @relation("SupplyUpdatedBy")
+
+  // Asset relations
+  assetCreated      Asset[]         @relation("AssetCreatedBy")
+  assetUpdated      Asset[]         @relation("AssetUpdatedBy")
+
+  // PriceHistory relations
+  priceCreated      PriceHistory[]  @relation("PriceCreatedBy")
+
+  // DailySale relations
+  saleCreated       DailySale[]     @relation("SaleCreatedBy")
+  saleUpdated       DailySale[]     @relation("SaleUpdatedBy")
+
+  // DailyExpense relations
+  expenseCreated    DailyExpense[]  @relation("ExpenseCreatedBy")
+  expenseUpdated    DailyExpense[]  @relation("ExpenseUpdatedBy")
+
+  // Payment relations
+  paymentCreated    Payment[]       @relation("PaymentCreatedBy")
+  paymentExecuted   Payment[]       @relation("PaymentExecutedBy")
+
+  // Budget relations
+  budgetCreated     Budget[]        @relation("BudgetCreatedBy")
+  budgetUpdated     Budget[]        @relation("BudgetUpdatedBy")
+}
+
+model session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+}
+
+model verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+}
+
+// ── App models ───────────────────────────────────────────────────────────────
+
+model Product {
+  id                String        @id @default(cuid())
+  name              String
+  category          String
+  unit              String
+  stock             Int           @default(0)
+  lowStockThreshold Int           @default(10)
+  imageUrl          String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  transactions      Transaction[]
+}
+
+model Transaction {
+  id        String          @id @default(cuid())
+  productId String
+  userId    String
+  type      TransactionType
+  quantity  Int
+  note      String?
+  createdAt DateTime        @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  user    user    @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+enum TransactionType {
+  STOCK_IN
+  STOCK_OUT
+}
+
+// Granular permissions for STAFF users (MANAGERs have all permissions implicitly)
+model StaffPermission {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  canAddStock     Boolean @default(true)   // Record STOCK_IN
+  canUseStock     Boolean @default(true)   // Record STOCK_OUT
+  canAddProducts  Boolean @default(false)  // Create products
+  canEditProducts Boolean @default(false)  // Edit products
+  canViewReports  Boolean @default(false)  // Access reports page
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Damot Coffee Management models ──────────────────────────────────────────
+
+enum ItemCategory {
+  INGREDIENT
+  FINISHED_GOOD
+}
+
+enum AssetCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+}
+
+model InventoryItem {
+  id          String       @id @default(cuid())
+  category    ItemCategory
+  date        DateTime
+  name        String
+  units       String
+  quantity    Decimal
+  unitCost    Decimal
+  totalCost   Decimal
+  supplier    String
+  deletedAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdById String
+  updatedById String?
+  deletedById String?
+
+  createdBy user  @relation("InventoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy user? @relation("InventoryUpdatedBy", fields: [updatedById], references: [id])
+  deletedBy user? @relation("InventoryDeletedBy", fields: [deletedById], references: [id])
+  prices    PriceHistory[]
+  sales     DailySale[]
+
+  @@index([category])
+  @@index([deletedAt])
+}
+
+model SupplyItem {
+  id          String   @id @default(cuid())
+  date        DateTime
+  name        String
+  units       String
+  quantity    Decimal
+  unitCost    Decimal
+  totalCost   Decimal
+  supplier    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+  updatedById String?
+
+  createdBy user  @relation("SupplyCreatedBy", fields: [createdById], references: [id])
+  updatedBy user? @relation("SupplyUpdatedBy", fields: [updatedById], references: [id])
+}
+
+model Asset {
+  id              String         @id @default(cuid())
+  name            String
+  category        String
+  acquisitionDate DateTime
+  quantity        Int
+  unitCost        Decimal
+  totalCost       Decimal
+  condition       AssetCondition
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  createdById     String
+  updatedById     String?
+
+  createdBy user  @relation("AssetCreatedBy", fields: [createdById], references: [id])
+  updatedBy user? @relation("AssetUpdatedBy", fields: [updatedById], references: [id])
+}
+
+model PriceHistory {
+  id              String   @id @default(cuid())
+  inventoryItemId String
+  price           Decimal
+  effectiveDate   DateTime
+  createdAt       DateTime @default(now())
+  createdById     String
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  createdBy     user          @relation("PriceCreatedBy", fields: [createdById], references: [id])
+  sales         DailySale[]
+
+  @@index([inventoryItemId, effectiveDate])
+}
+
+model DailySale {
+  id              String   @id @default(cuid())
+  date            DateTime
+  inventoryItemId String
+  priceHistoryId  String
+  quantitySold    Decimal
+  saleTotal       Decimal
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdById     String
+  updatedById     String?
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  priceHistory  PriceHistory  @relation(fields: [priceHistoryId], references: [id])
+  createdBy     user          @relation("SaleCreatedBy", fields: [createdById], references: [id])
+  updatedBy     user?         @relation("SaleUpdatedBy", fields: [updatedById], references: [id])
+
+  @@index([date])
+  @@index([inventoryItemId])
+}
+
+model DailyExpense {
+  id          String   @id @default(cuid())
+  date        DateTime
+  itemName    String
+  quantity    Decimal
+  unitPrice   Decimal
+  totalPrice  Decimal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+  updatedById String?
+
+  createdBy user  @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
+  updatedBy user? @relation("ExpenseUpdatedBy", fields: [updatedById], references: [id])
+
+  @@index([date])
+}
+
+model Payment {
+  id            String    @id @default(cuid())
+  date          DateTime
+  payee         String
+  description   String
+  amount        Decimal
+  paymentMethod String
+  executedAt    DateTime?
+  executedById  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdById   String
+
+  createdBy  user  @relation("PaymentCreatedBy", fields: [createdById], references: [id])
+  executedBy user? @relation("PaymentExecutedBy", fields: [executedById], references: [id])
+
+  @@index([date])
+}
+
+model Budget {
+  id              String   @id @default(cuid())
+  periodMonth     Int
+  periodYear      Int
+  category        String
+  allocatedAmount Decimal
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdById     String
+  updatedById     String?
+
+  createdBy user  @relation("BudgetCreatedBy", fields: [createdById], references: [id])
+  updatedBy user? @relation("BudgetUpdatedBy", fields: [updatedById], references: [id])
+
+  @@unique([periodMonth, periodYear, category])
+  @@index([periodYear, periodMonth])
+}

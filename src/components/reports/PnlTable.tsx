@@ -1,0 +1,82 @@
+'use client'
+
+import type { PnlReport } from '@/types'
+
+interface PnlTableProps {
+  from: string
+  to: string
+  onFromChange: (v: string) => void
+  onToChange: (v: string) => void
+  data?: PnlReport
+  loading?: boolean
+}
+
+export default function PnlTable({ from, to, onFromChange, onToChange, data, loading }: PnlTableProps) {
+  return (
+    <div className="space-y-4">
+      {/* Date range picker */}
+      <div className="flex flex-wrap gap-3 items-end">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-amber-900">From</label>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => onFromChange(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-amber-200 bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-amber-900">To</label>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => onToChange(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-amber-200 bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="h-40 bg-amber-50 rounded-xl animate-pulse" />
+      ) : data ? (
+        <div className="overflow-x-auto rounded-xl border border-amber-100 shadow-sm">
+          <table className="w-full text-sm">
+            <thead className="bg-amber-50 border-b border-amber-100">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-amber-700 uppercase">Date</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-amber-700 uppercase">Revenue</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-amber-700 uppercase">Costs</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-amber-700 uppercase">Profit</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-amber-50">
+              {data.dailyBreakdown.map((row) => (
+                <tr key={row.date} className="hover:bg-amber-50/50">
+                  <td className="px-4 py-3 text-amber-900">{new Date(row.date).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-right text-amber-900">{row.revenue}</td>
+                  <td className="px-4 py-3 text-right text-amber-900">{row.costs}</td>
+                  <td className={`px-4 py-3 text-right font-medium ${Number(row.profit) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                    {row.profit}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="bg-amber-50 border-t-2 border-amber-200">
+              <tr>
+                <td className="px-4 py-3 font-semibold text-amber-900">Total</td>
+                <td className="px-4 py-3 text-right font-semibold text-amber-900">{data.totalRevenue}</td>
+                <td className="px-4 py-3 text-right font-semibold text-amber-900">{data.totalCosts}</td>
+                <td className={`px-4 py-3 text-right font-bold ${Number(data.totalProfit) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                  {data.totalProfit}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      ) : (
+        <p className="text-sm text-amber-400 text-center py-8">Select a date range to view the P&amp;L report.</p>
+      )}
+    </div>
+  )
+}

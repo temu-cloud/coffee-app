@@ -1,0 +1,11 @@
+import api from './axios'
+import type { DailySale, SaleQuery, PaginatedResponse } from '@/types'
+
+export const getSales = (params?: SaleQuery) =>
+  api.get<PaginatedResponse<DailySale>>('/sales', { params }).then((r) => r.data)
+
+export const getSale = (id: string) =>
+  api.get<DailySale>(`/sales/${id}`).then((r) => r.data)
+
+export const createSale = (data: Partial<DailySale>) =>
+  api.post<DailySale>('/sales', data).then((r) => r.data)
