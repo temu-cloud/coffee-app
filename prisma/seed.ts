@@ -188,6 +188,7 @@ async function main() {
     update: {},
     create: {
       id: 'seed-espresso-price-1',
+      itemName: 'Espresso',
       inventoryItemId: espresso.id,
       price: 35,
       effectiveDate: daysAgo(30),
@@ -201,6 +202,7 @@ async function main() {
     update: {},
     create: {
       id: 'seed-espresso-price-2',
+      itemName: 'Espresso',
       inventoryItemId: espresso.id,
       price: 40,
       effectiveDate: daysAgo(7),
@@ -214,6 +216,7 @@ async function main() {
     update: {},
     create: {
       id: 'seed-soft-drink-price-1',
+      itemName: 'Soft Drink',
       inventoryItemId: softDrink.id,
       price: 50,
       effectiveDate: daysAgo(30),
@@ -227,6 +230,7 @@ async function main() {
     update: {},
     create: {
       id: 'seed-spiced-coffee-price-1',
+      itemName: 'Spiced Coffee',
       inventoryItemId: spicedCoffee.id,
       price: 45,
       effectiveDate: daysAgo(30),
@@ -245,6 +249,8 @@ async function main() {
     await prisma.dailySale.create({
       data: {
         date: saleDate,
+        itemName: 'Espresso',
+        unitPrice: Number(espressoActivePrice.price),
         inventoryItemId: espresso.id,
         priceHistoryId: espressoActivePrice.id,
         quantitySold: 10 + i,
@@ -256,6 +262,8 @@ async function main() {
     await prisma.dailySale.create({
       data: {
         date: saleDate,
+        itemName: 'Soft Drink',
+        unitPrice: Number(softDrinkPrice.price),
         inventoryItemId: softDrink.id,
         priceHistoryId: softDrinkPrice.id,
         quantitySold: 5 + i,
@@ -267,6 +275,8 @@ async function main() {
     await prisma.dailySale.create({
       data: {
         date: saleDate,
+        itemName: 'Spiced Coffee',
+        unitPrice: Number(spicedCoffeePrice.price),
         inventoryItemId: spicedCoffee.id,
         priceHistoryId: spicedCoffeePrice.id,
         quantitySold: 8,
