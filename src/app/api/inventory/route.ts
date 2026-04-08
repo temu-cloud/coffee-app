@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
-        orderBy: { name: 'asc' },
+        orderBy: [{ date: 'desc' }, { name: 'asc' }],
       }),
       prisma.inventoryItem.count({ where }),
     ])
@@ -61,14 +61,8 @@ export async function POST(request: NextRequest) {
     const qty = Number(quantity)
     const cost = Number(unitCost)
 
-    if (qty <= 0) {
-      return Response.json({ error: 'quantity must be greater than 0' }, { status: 400 })
-    }
-    if (cost <= 0) {
-      return Response.json({ error: 'unitCost must be greater than 0' }, { status: 400 })
-    }
-
-    const totalCost = qty * cost
+    if (qty <= 0) return Response.json({ error: 'quantity must be greater than 0' }, { status: 400 })
+    if (cost <= 0) return Response.json({ error: 'unitCost must be greater than 0' }, { status: 400 })
 
     const item = await prisma.inventoryItem.create({
       data: {
@@ -78,7 +72,7 @@ export async function POST(request: NextRequest) {
         units,
         quantity: qty,
         unitCost: cost,
-        totalCost,
+        totalCost: qty * cost,
         supplier,
         createdById: session!.user.id,
       },

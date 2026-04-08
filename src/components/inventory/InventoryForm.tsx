@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
@@ -77,68 +77,15 @@ export default function InventoryForm({ item, onSubmit, loading }: InventoryForm
         ]}
         error={errors.category}
       />
-      <Input
-        label="Date"
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        error={errors.date}
-        disabled={loading}
-      />
-      <Input
-        label="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        error={errors.name}
-        placeholder="e.g. Arabica Beans"
-        disabled={loading}
-      />
-      <Input
-        label="Units"
-        value={units}
-        onChange={(e) => setUnits(e.target.value)}
-        error={errors.units}
-        placeholder="e.g. kg, liters, pcs"
-        disabled={loading}
-      />
-      <Input
-        label="Quantity"
-        type="number"
-        min="0.01"
-        step="any"
-        value={quantity}
-        onChange={(e) => setQuantity(e.target.value)}
-        error={errors.quantity}
-        disabled={loading}
-      />
-      <Input
-        label="Unit Cost"
-        type="number"
-        min="0.01"
-        step="any"
-        value={unitCost}
-        onChange={(e) => setUnitCost(e.target.value)}
-        error={errors.unitCost}
-        disabled={loading}
-      />
-      <Input
-        label="Total Cost (auto-computed)"
-        value={totalCost}
-        readOnly
-        className="bg-amber-50 cursor-not-allowed"
-      />
-      <Input
-        label="Supplier"
-        value={supplier}
-        onChange={(e) => setSupplier(e.target.value)}
-        error={errors.supplier}
-        placeholder="Supplier name"
-        disabled={loading}
-      />
+      <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} disabled={loading} />
+      <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} placeholder="e.g. Arabica Beans" disabled={loading} />
+      <Input label="Units" value={units} onChange={(e) => setUnits(e.target.value)} error={errors.units} placeholder="e.g. kg, liters, pcs" disabled={loading} />
+      <Input label="Quantity" type="number" min="0.01" step="any" value={quantity} onChange={(e) => setQuantity(e.target.value)} error={errors.quantity} disabled={loading} />
+      <Input label="Unit Cost" type="number" min="0.01" step="any" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} error={errors.unitCost} disabled={loading} />
+      <Input label="Total Cost (auto-computed)" value={totalCost} readOnly className="bg-amber-50 cursor-not-allowed" />
+      <Input label="Supplier" value={supplier} onChange={(e) => setSupplier(e.target.value)} error={errors.supplier} placeholder="Supplier name" disabled={loading} />
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="submit" loading={loading}>
-          {item ? 'Save Changes' : 'Add Item'}
-        </Button>
+        <Button type="submit" loading={loading}>{item ? 'Save Changes' : 'Add Item'}</Button>
       </div>
     </form>
   )

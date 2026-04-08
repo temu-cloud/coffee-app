@@ -17,29 +17,41 @@ export async function GET(request: NextRequest) {
   const toDate = to ? new Date(to) : new Date()
 
   try {
-    const [expenses, supplies] = await Promise.all([
-      prisma.dailyExpense.findMany({ where: { date: { gte: fromDate, lte: toDate } } }),
-      prisma.supplyItem.findMany({ where: { date: { gte: fromDate, lte: toDate } } }),
+    const [ingredients, finishedGoods, assets, supplies, expenses, payments] = await Promise.all([
+      prisma.inventoryItem.aggregate({
+        where: { category: 'INGREDIENT', deletedAt: null, date: { gte: fromDate, lte: toDate } },
+        _sum: { totalCost: true },
+      }),
+      prisma.inventoryItem.aggregate({
+        where: { category: 'FINISHED_GOOD', deletedAt: null, date: { gte: fromDate, lte: toDate } },
+        _sum: { totalCost: true },
+      }),
+      prisma.asset.aggregate({
+        where: { acquisitionDate: { gte: fromDate, lte: toDate } },
+        _sum: { totalCost: true },
+      }),
+      prisma.supplyItem.aggregate({
+        where: { date: { gte: fromDate, lte: toDate } },
+        _sum: { totalCost: true },
+      }),
+      prisma.dailyExpense.aggregate({
+        where: { date: { gte: fromDate, lte: toDate } },
+        _sum: { totalPrice: true },
+      }),
+      prisma.payment.aggregate({
+        where: { date: { gte: fromDate, lte: toDate }, executedAt: { not: null } },
+        _sum: { amount: true },
+      }),
     ])
 
-    // Group expenses by itemName
-    const costMap: Record<string, number> = {}
-
-    for (const expense of expenses) {
-      const key = expense.itemName
-      costMap[key] = (costMap[key] ?? 0) + Number(expense.totalPrice)
-    }
-
-    // Group supplies by name
-    for (const supply of supplies) {
-      const key = supply.name
-      costMap[key] = (costMap[key] ?? 0) + Number(supply.totalCost)
-    }
-
-    const data = Object.entries(costMap).map(([category, totalCost]) => ({
-      category,
-      totalCost: totalCost.toFixed(2),
-    }))
+    const data = [
+      { category: 'Inventory — Ingredients', totalCost: Number(ingredients._sum.totalCost ?? 0).toFixed(2) },
+      { category: 'Inventory — Finished Goods', totalCost: Number(finishedGoods._sum.totalCost ?? 0).toFixed(2) },
+      { category: 'Assets', totalCost: Number(assets._sum.totalCost ?? 0).toFixed(2) },
+      { category: 'Supplies', totalCost: Number(supplies._sum.totalCost ?? 0).toFixed(2) },
+      { category: 'Expenses', totalCost: Number(expenses._sum.totalPrice ?? 0).toFixed(2) },
+      { category: 'Payments', totalCost: Number(payments._sum.amount ?? 0).toFixed(2) },
+    ].filter((row) => Number(row.totalCost) > 0)
 
     return Response.json(data)
   } catch (e) {

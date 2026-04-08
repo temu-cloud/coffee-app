@@ -11,7 +11,6 @@ export async function GET() {
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
-
     const sevenDaysAgo = new Date(todayStart)
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
 
@@ -21,14 +20,14 @@ export async function GET() {
       todaySalesAgg,
       todayExpensesAgg,
       todayPaymentsAgg,
+      todayInventoryCostAgg,
+      todaySupplyCostAgg,
       pendingPaymentsAgg,
     ] = await Promise.all([
-      // All active inventory items (ingredients) for low-stock calculation
       prisma.inventoryItem.findMany({
         where: { deletedAt: null, category: 'INGREDIENT' },
         select: { id: true, name: true, quantity: true },
       }),
-      // Daily sales for the past 7 days for usage chart
       prisma.dailySale.findMany({
         where: { date: { gte: sevenDaysAgo } },
         select: { quantitySold: true, date: true },
@@ -45,6 +44,14 @@ export async function GET() {
         where: { date: { gte: todayStart, lt: todayEnd }, executedAt: { not: null } },
         _sum: { amount: true },
       }),
+      prisma.inventoryItem.aggregate({
+        where: { deletedAt: null, date: { gte: todayStart, lt: todayEnd } },
+        _sum: { totalCost: true },
+      }),
+      prisma.supplyItem.aggregate({
+        where: { date: { gte: todayStart, lt: todayEnd } },
+        _sum: { totalCost: true },
+      }),
       prisma.payment.aggregate({
         where: { executedAt: null },
         _sum: { amount: true },
@@ -52,7 +59,7 @@ export async function GET() {
       }),
     ])
 
-    // Aggregate quantity per ingredient name (multiple entries can exist for same ingredient)
+    // Aggregate quantity per ingredient name for low-stock
     const stockByName: Record<string, { id: string; name: string; stock: number }> = {}
     for (const item of allInventoryItems) {
       if (!stockByName[item.name]) {
@@ -66,7 +73,7 @@ export async function GET() {
       .filter((p) => p.stock < LOW_STOCK_THRESHOLD)
       .map((p) => ({ ...p, lowStockThreshold: LOW_STOCK_THRESHOLD }))
 
-    // Build daily usage chart from sales for past 7 days
+    // 7-day usage chart from sales
     const dailyMap: Record<string, number> = {}
     for (let i = 0; i < 7; i++) {
       const d = new Date(sevenDaysAgo)
@@ -81,7 +88,10 @@ export async function GET() {
 
     const todayRevenue = Number(todaySalesAgg._sum.saleTotal ?? 0)
     const todayCosts =
-      Number(todayExpensesAgg._sum.totalPrice ?? 0) + Number(todayPaymentsAgg._sum.amount ?? 0)
+      Number(todayExpensesAgg._sum.totalPrice ?? 0) +
+      Number(todayPaymentsAgg._sum.amount ?? 0) +
+      Number(todayInventoryCostAgg._sum.totalCost ?? 0) +
+      Number(todaySupplyCostAgg._sum.totalCost ?? 0)
     const todayProfit = todayRevenue - todayCosts
 
     return Response.json({

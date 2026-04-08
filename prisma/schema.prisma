@@ -223,35 +223,39 @@ model Asset {
 
 model PriceHistory {
   id              String   @id @default(cuid())
-  inventoryItemId String
+  itemName        String                        // free-form item name
   price           Decimal
   effectiveDate   DateTime
   createdAt       DateTime @default(now())
   createdById     String
 
-  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
-  createdBy     user          @relation("PriceCreatedBy", fields: [createdById], references: [id])
-  sales         DailySale[]
+  inventoryItemId String?                       // optional link to inventory item
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  createdBy       user           @relation("PriceCreatedBy", fields: [createdById], references: [id])
+  sales           DailySale[]
 
+  @@index([itemName, effectiveDate])
   @@index([inventoryItemId, effectiveDate])
 }
 
 model DailySale {
   id              String   @id @default(cuid())
   date            DateTime
-  inventoryItemId String
-  priceHistoryId  String
+  itemName        String                        // free-form item name
+  unitPrice       Decimal                       // price per unit at time of sale
   quantitySold    Decimal
   saleTotal       Decimal
+  inventoryItemId String?                       // optional — set when selling a priced inventory item
+  priceHistoryId  String?                       // optional — set when selling a priced inventory item
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   createdById     String
   updatedById     String?
 
-  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
-  priceHistory  PriceHistory  @relation(fields: [priceHistoryId], references: [id])
-  createdBy     user          @relation("SaleCreatedBy", fields: [createdById], references: [id])
-  updatedBy     user?         @relation("SaleUpdatedBy", fields: [updatedById], references: [id])
+  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  priceHistory  PriceHistory?  @relation(fields: [priceHistoryId], references: [id])
+  createdBy     user           @relation("SaleCreatedBy", fields: [createdById], references: [id])
+  updatedBy     user?          @relation("SaleUpdatedBy", fields: [updatedById], references: [id])
 
   @@index([date])
   @@index([inventoryItemId])

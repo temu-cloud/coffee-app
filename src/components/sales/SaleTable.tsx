@@ -5,15 +5,10 @@ import Button from '@/components/ui/Button'
 import { useSession } from '@/lib/auth-client'
 import type { DailySale } from '@/types'
 
-interface SaleRow extends DailySale {
-  inventoryItem?: { name: string }
-  createdBy?: { name: string }
-}
-
 interface SaleTableProps {
-  sales: SaleRow[]
+  sales: DailySale[]
   loading?: boolean
-  onDelete: (sale: SaleRow) => void
+  onDelete: (sale: DailySale) => void
 }
 
 export default function SaleTable({ sales, loading, onDelete }: SaleTableProps) {
@@ -21,12 +16,12 @@ export default function SaleTable({ sales, loading, onDelete }: SaleTableProps) 
   const role = session?.user?.role
   const canManage = role === 'SUPER_ADMIN' || role === 'ADMIN'
 
-  const columns: Column<SaleRow>[] = [
+  const columns: Column<DailySale>[] = [
     { key: 'date', header: 'Date', render: (row) => new Date(row.date).toLocaleDateString() },
-    { key: 'itemName', header: 'Item', render: (row) => row.inventoryItem?.name ?? '—' },
+    { key: 'itemName', header: 'Item' },
+    { key: 'unitPrice', header: 'Unit Price' },
     { key: 'quantitySold', header: 'Qty Sold' },
     { key: 'saleTotal', header: 'Sale Total' },
-    { key: 'recordedBy', header: 'Recorded By', render: (row) => row.createdBy?.name ?? '—' },
     {
       key: 'actions',
       header: 'Actions',

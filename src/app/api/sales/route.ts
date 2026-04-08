@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const from = searchParams.get('from')
   const to = searchParams.get('to')
-  const inventoryItemId = searchParams.get('inventoryItemId')
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
   const pageSize = Math.min(100, parseInt(searchParams.get('pageSize') ?? '20'))
 
@@ -24,9 +23,6 @@ export async function GET(request: NextRequest) {
         ...(to ? { lte: new Date(to) } : {}),
       }
     }
-    if (inventoryItemId) {
-      where.inventoryItemId = inventoryItemId
-    }
 
     const [data, total] = await Promise.all([
       prisma.dailySale.findMany({
@@ -34,7 +30,6 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { date: 'desc' },
-        include: { inventoryItem: true, priceHistory: true },
       }),
       prisma.dailySale.count({ where }),
     ])
@@ -55,81 +50,36 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { inventoryItemId, quantitySold, date } = body
+    const { itemName, unitPrice, quantitySold, date, inventoryItemId, priceHistoryId } = body
 
-    if (!inventoryItemId || quantitySold == null || !date) {
+    if (!itemName || unitPrice == null || quantitySold == null || !date) {
       return Response.json(
-        { error: 'inventoryItemId, quantitySold, and date are required' },
+        { error: 'itemName, unitPrice, quantitySold, and date are required' },
         { status: 400 }
       )
     }
 
     const qty = Number(quantitySold)
-    if (qty <= 0) {
-      return Response.json({ error: 'quantitySold must be greater than 0' }, { status: 400 })
-    }
+    const price = Number(unitPrice)
 
-    const saleDate = new Date(date)
+    if (qty <= 0) return Response.json({ error: 'quantitySold must be > 0' }, { status: 400 })
+    if (price <= 0) return Response.json({ error: 'unitPrice must be > 0' }, { status: 400 })
 
-    const sale = await prisma.$transaction(async (tx) => {
-      // a. Fetch InventoryItem
-      const item = await tx.inventoryItem.findUnique({ where: { id: inventoryItemId } })
-      if (!item || item.deletedAt !== null) {
-        throw { status: 404, error: 'Inventory item not found' }
-      }
-
-      // b. Check stock
-      if (Number(item.quantity) < qty) {
-        throw { status: 422, error: 'Insufficient stock', available: item.quantity }
-      }
-
-      // c. Fetch latest applicable price
-      const priceHistory = await tx.priceHistory.findFirst({
-        where: { inventoryItemId, effectiveDate: { lte: saleDate } },
-        orderBy: { effectiveDate: 'desc' },
-      })
-      if (!priceHistory) {
-        throw { status: 422, error: 'No price found for this item on the given date' }
-      }
-
-      // d. Compute saleTotal
-      const saleTotal = qty * Number(priceHistory.price)
-
-      // e. Create DailySale
-      const created = await tx.dailySale.create({
-        data: {
-          date: saleDate,
-          inventoryItemId,
-          priceHistoryId: priceHistory.id,
-          quantitySold: qty,
-          saleTotal,
-          createdById: session!.user.id,
-        },
-      })
-
-      // f. Decrement inventory
-      await tx.inventoryItem.update({
-        where: { id: inventoryItemId },
-        data: { quantity: { decrement: qty } },
-      })
-
-      return created
+    const sale = await prisma.dailySale.create({
+      data: {
+        date: new Date(date),
+        itemName,
+        unitPrice: price,
+        quantitySold: qty,
+        saleTotal: qty * price,
+        inventoryItemId: inventoryItemId ?? null,
+        priceHistoryId: priceHistoryId ?? null,
+        createdById: session!.user.id,
+      },
     })
 
     return Response.json(sale, { status: 201 })
-  } catch (e: unknown) {
-    if (e && typeof e === 'object' && 'status' in e) {
-      const err = e as { status: number; error: string; available?: unknown }
-      if (err.status === 404) {
-        return Response.json({ error: err.error }, { status: 404 })
-      }
-      if (err.status === 422) {
-        return Response.json(
-          { error: err.error, ...(err.available !== undefined ? { available: err.available } : {}) },
-          { status: 422 }
-        )
-      }
-    }
+  } catch (e) {
     console.error(e)
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }

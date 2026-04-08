@@ -28,11 +28,7 @@ export default function InventoryTable({ items, loading, onEdit, onDelete }: Inv
         </Badge>
       ),
     },
-    {
-      key: 'date',
-      header: 'Date',
-      render: (row) => new Date(row.date).toLocaleDateString(),
-    },
+    { key: 'date', header: 'Date', render: (row) => new Date(row.date).toLocaleDateString() },
     { key: 'name', header: 'Name' },
     { key: 'units', header: 'Units' },
     { key: 'quantity', header: 'Quantity' },
@@ -53,11 +49,6 @@ export default function InventoryTable({ items, loading, onEdit, onDelete }: Inv
   ]
 
   return (
-    <Table
-      columns={columns}
-      data={items}
-      loading={loading}
-      emptyMessage="No inventory items found."
-    />
+    <Table columns={columns} data={items} loading={loading} emptyMessage="No inventory items found." />
   )
 }

@@ -3,44 +3,30 @@
 import { useState } from 'react'
 import { usePrices, useCreatePrice } from '@/hooks/usePrices'
 import PriceForm from '@/components/prices/PriceForm'
-import PriceTable from '@/components/prices/PriceTable'
-import PriceHistoryList from '@/components/prices/PriceHistoryList'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
-import { useInventoryItems } from '@/hooks/useInventory'
 import type { PriceHistory } from '@/types'
+import Skeleton from '@/components/ui/Skeleton'
 
 export default function PricesPage() {
   const { toast } = useToast()
   const [formOpen, setFormOpen] = useState(false)
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
 
   const { data: prices, isLoading } = usePrices()
-  const { data: inventoryData } = useInventoryItems({ category: 'FINISHED_GOOD', pageSize: 100 })
   const createMutation = useCreatePrice()
 
-  const finishedGoods = inventoryData?.data ?? []
-
-  // Build a map of itemId -> latest price
+  // Latest price per item name
   const latestPriceMap = new Map<string, PriceHistory>()
   if (Array.isArray(prices)) {
     for (const p of prices) {
-      const existing = latestPriceMap.get(p.inventoryItemId)
+      const existing = latestPriceMap.get(p.itemName)
       if (!existing || p.effectiveDate > existing.effectiveDate) {
-        latestPriceMap.set(p.inventoryItemId, p)
+        latestPriceMap.set(p.itemName, p)
       }
     }
   }
-
-  const currentPrices = Array.from(latestPriceMap.values()).map((p) => ({
-    ...p,
-    inventoryItem: finishedGoods.find((item) => item.id === p.inventoryItemId),
-  }))
-
-  const selectedItem = selectedItemId
-    ? finishedGoods.find((item) => item.id === selectedItemId)
-    : null
+  const currentPrices = Array.from(latestPriceMap.values())
 
   async function handleFormSubmit(data: Partial<PriceHistory>) {
     try {
@@ -48,8 +34,7 @@ export default function PricesPage() {
       toast('Price set successfully')
       setFormOpen(false)
     } catch (e: unknown) {
-      const err = e as { message?: string }
-      toast(err.message ?? 'Something went wrong', 'error')
+      toast((e as { message?: string }).message ?? 'Something went wrong', 'error')
     }
   }
 
@@ -58,20 +43,35 @@ export default function PricesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-amber-900">Prices</h2>
-          <p className="text-sm text-amber-500">Current prices per finished good</p>
+          <p className="text-sm text-amber-500">Set selling prices for any item</p>
         </div>
         <Button onClick={() => setFormOpen(true)}>+ Set Price</Button>
       </div>
 
-      <PriceTable prices={currentPrices} loading={isLoading} onSelectItem={setSelectedItemId} />
-
-      {selectedItemId && (
-        <div className="bg-white rounded-xl border border-amber-100 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-amber-900">Price History</h3>
-            <button onClick={() => setSelectedItemId(null)} className="text-amber-400 hover:text-amber-700 text-sm">✕ Close</button>
-          </div>
-          <PriceHistoryList inventoryItemId={selectedItemId} itemName={selectedItem?.name} />
+      {isLoading ? (
+        <Skeleton height="h-40" />
+      ) : currentPrices.length === 0 ? (
+        <p className="text-sm text-amber-400 text-center py-8">No prices set yet.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-amber-100 shadow-sm">
+          <table className="w-full text-sm">
+            <thead className="bg-amber-50 border-b border-amber-100">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-amber-700 uppercase">Item</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-amber-700 uppercase">Current Price</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-amber-700 uppercase">Effective Date</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-amber-50">
+              {currentPrices.map((p) => (
+                <tr key={p.id} className="hover:bg-amber-50/50">
+                  <td className="px-4 py-3 text-amber-900 font-medium">{p.itemName}</td>
+                  <td className="px-4 py-3 text-right text-amber-900">{p.price}</td>
+                  <td className="px-4 py-3 text-amber-600">{new Date(p.effectiveDate).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

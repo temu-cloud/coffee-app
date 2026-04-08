@@ -17,9 +17,7 @@ export async function GET(
 
   try {
     const item = await prisma.inventoryItem.findUnique({ where: { id } })
-    if (!item || item.deletedAt !== null) {
-      return Response.json({ error: 'Not found' }, { status: 404 })
-    }
+    if (!item || item.deletedAt !== null) return Response.json({ error: 'Not found' }, { status: 404 })
     return Response.json(item)
   } catch (e) {
     console.error(e)
@@ -41,9 +39,7 @@ export async function PUT(
 
   try {
     const existing = await prisma.inventoryItem.findUnique({ where: { id } })
-    if (!existing || existing.deletedAt !== null) {
-      return Response.json({ error: 'Not found' }, { status: 404 })
-    }
+    if (!existing || existing.deletedAt !== null) return Response.json({ error: 'Not found' }, { status: 404 })
 
     const body = await request.json()
     const { category, date, name, units, quantity, unitCost, supplier } = body
@@ -58,14 +54,8 @@ export async function PUT(
     const qty = Number(quantity)
     const cost = Number(unitCost)
 
-    if (qty <= 0) {
-      return Response.json({ error: 'quantity must be greater than 0' }, { status: 400 })
-    }
-    if (cost <= 0) {
-      return Response.json({ error: 'unitCost must be greater than 0' }, { status: 400 })
-    }
-
-    const totalCost = qty * cost
+    if (qty <= 0) return Response.json({ error: 'quantity must be greater than 0' }, { status: 400 })
+    if (cost <= 0) return Response.json({ error: 'unitCost must be greater than 0' }, { status: 400 })
 
     const item = await prisma.inventoryItem.update({
       where: { id },
@@ -76,7 +66,7 @@ export async function PUT(
         units,
         quantity: qty,
         unitCost: cost,
-        totalCost,
+        totalCost: qty * cost,
         supplier,
         updatedById: session!.user.id,
       },
@@ -103,16 +93,11 @@ export async function DELETE(
 
   try {
     const existing = await prisma.inventoryItem.findUnique({ where: { id } })
-    if (!existing || existing.deletedAt !== null) {
-      return Response.json({ error: 'Not found' }, { status: 404 })
-    }
+    if (!existing || existing.deletedAt !== null) return Response.json({ error: 'Not found' }, { status: 404 })
 
     await prisma.inventoryItem.update({
       where: { id },
-      data: {
-        deletedAt: new Date(),
-        deletedById: session!.user.id,
-      },
+      data: { deletedAt: new Date(), deletedById: session!.user.id },
     })
 
     return new Response(null, { status: 204 })

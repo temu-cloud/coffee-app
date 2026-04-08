@@ -2,18 +2,31 @@ import { NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireSession, requireRole } from '@/lib/api-auth'
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   const { session, error } = await requireSession()
   if (error) return error
 
-  const roleError = requireRole(session!, ['SUPER_ADMIN', 'FINANCE_MANAGER'])
+  const roleError = requireRole(session!, ['SUPER_ADMIN', 'FINANCE_MANAGER', 'ADMIN'])
   if (roleError) return roleError
+
+  const { searchParams } = request.nextUrl
+  const distinct = searchParams.get('distinct') === 'true'
 
   try {
     const data = await prisma.priceHistory.findMany({
-      include: { inventoryItem: true },
       orderBy: { effectiveDate: 'desc' },
     })
+
+    if (distinct) {
+      const seen = new Set<string>()
+      const unique = data.filter((p) => {
+        if (seen.has(p.itemName)) return false
+        seen.add(p.itemName)
+        return true
+      })
+      return Response.json(unique)
+    }
+
     return Response.json(data)
   } catch (e) {
     console.error(e)
@@ -30,11 +43,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { inventoryItemId, price, effectiveDate } = body
+    const { itemName, price, effectiveDate } = body
 
-    if (!inventoryItemId || price == null || !effectiveDate) {
+    if (!itemName || price == null || !effectiveDate) {
       return Response.json(
-        { error: 'inventoryItemId, price, and effectiveDate are required' },
+        { error: 'itemName, price, and effectiveDate are required' },
         { status: 400 }
       )
     }
@@ -46,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     const record = await prisma.priceHistory.create({
       data: {
-        inventoryItemId,
+        itemName,
         price: priceNum,
         effectiveDate: new Date(effectiveDate),
         createdById: session!.user.id,

@@ -31,20 +31,20 @@ const ADMIN_NAV: NavItem[] = [
 ]
 
 const FINANCE_MANAGER_NAV: NavItem[] = [
-  { href: '/', label: 'Dashboard', icon: <FiBarChart2 className="w-5 h-5" /> },
+  { href: '/', label: 'Dashboard', icon: <FiHome className="w-5 h-5" /> },
   { href: '/prices', label: 'Prices', icon: <FiTag className="w-5 h-5" /> },
   { href: '/payments', label: 'Payments', icon: <FiCreditCard className="w-5 h-5" /> },
   { href: '/reports/pnl', label: 'P&L Report', icon: <FiTrendingUp className="w-5 h-5" /> },
   { href: '/reports/sales-volume', label: 'Sales Volume', icon: <FiBarChart2 className="w-5 h-5" /> },
-  { href: '/reports/cost-analysis', label: 'Cost Analysis', icon: <FiBarChart2 className="w-5 h-5" /> },
-  { href: '/budgets', label: 'Budgets', icon: <FiBarChart2 className="w-5 h-5" /> },
+  { href: '/reports/cost-analysis', label: 'Cost Analysis', icon: <FiTrendingDown className="w-5 h-5" /> },
+  { href: '/budgets', label: 'Budgets', icon: <FiBriefcase className="w-5 h-5" /> },
   { href: '/inventory', label: 'Inventory', icon: <FiPackage className="w-5 h-5" /> },
   { href: '/supplies', label: 'Supplies', icon: <FiBox className="w-5 h-5" /> },
   { href: '/assets', label: 'Assets', icon: <FiHardDrive className="w-5 h-5" /> },
 ]
 
 const FACILITY_MANAGER_NAV: NavItem[] = [
-  { href: '/', label: 'Dashboard', icon: <FiBarChart2 className="w-5 h-5" /> },
+  { href: '/', label: 'Dashboard', icon: <FiHome className="w-5 h-5" /> },
   { href: '/inventory', label: 'Inventory', icon: <FiPackage className="w-5 h-5" /> },
   { href: '/supplies', label: 'Supplies', icon: <FiBox className="w-5 h-5" /> },
   { href: '/assets', label: 'Assets', icon: <FiHardDrive className="w-5 h-5" /> },

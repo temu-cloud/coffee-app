@@ -128,20 +128,23 @@ export interface Asset {
 
 export interface PriceHistory {
   id: string
-  inventoryItemId: string
+  itemName: string
   price: string
   effectiveDate: string
   createdAt: string
   createdById: string
+  inventoryItemId?: string | null
 }
 
 export interface DailySale {
   id: string
   date: string
-  inventoryItemId: string
-  priceHistoryId: string
+  itemName: string
+  unitPrice: string
   quantitySold: string
   saleTotal: string
+  inventoryItemId?: string | null
+  priceHistoryId?: string | null
   createdAt: string
   updatedAt: string
   createdById: string
