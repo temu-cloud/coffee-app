@@ -19,13 +19,13 @@ export async function GET(request: NextRequest) {
   try {
     const sales = await prisma.dailySale.findMany({
       where: { date: { gte: fromDate, lte: toDate } },
-      include: { inventoryItem: { select: { name: true } } },
       orderBy: { date: 'asc' },
     })
 
     const data = sales.map((sale) => ({
-      inventoryItemId: sale.inventoryItemId,
-      itemName: sale.inventoryItem.name,
+      inventoryItemId: sale.inventoryItemId ?? null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      itemName: (sale as any).itemName ?? '—',
       date: sale.date.toISOString().slice(0, 10),
       quantitySold: sale.quantitySold.toString(),
     }))
