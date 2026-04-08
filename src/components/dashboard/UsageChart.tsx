@@ -38,7 +38,7 @@ export default function UsageChart({ data }: UsageChartProps) {
           contentStyle={{ background: '#fff', border: '1px solid #fde68a', borderRadius: 8 }}
           labelStyle={{ color: '#92400e', fontWeight: 600 }}
         />
-        <Bar dataKey="quantity" fill="#92400e" radius={[4, 4, 0, 0]} name="Stock Out" />
+        <Bar dataKey="quantity" fill="#92400e" radius={[4, 4, 0, 0]} name="Sales Volume" />
       </BarChart>
     </ResponsiveContainer>
   )

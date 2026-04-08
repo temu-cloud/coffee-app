@@ -49,7 +49,7 @@ export default function LowStockTable({ products, loading }: LowStockTableProps)
     <Table
       columns={columns}
       data={products}
-      emptyMessage="No low stock products. All good! ☕"
+      emptyMessage="No low stock products. All good! "
     />
   )
 }

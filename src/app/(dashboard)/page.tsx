@@ -47,7 +47,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl border border-amber-100 shadow-sm p-5">
-              <h2 className="text-base font-semibold text-amber-900 mb-4">7-Day Stock Usage</h2>
+              <h2 className="text-base font-semibold text-amber-900 mb-4">7-Day Sales Volume</h2>
               {isLoading ? <Skeleton height="h-48" /> : <UsageChart data={data?.dailyUsage ?? []} />}
             </div>
             <div className="bg-white rounded-xl border border-amber-100 shadow-sm p-5">
