@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
+import DatePicker from '@/components/ui/DatePicker'
 import type { InventoryItem, ItemCategory } from '@/types'
 
 interface InventoryFormProps {
@@ -79,7 +80,7 @@ export default function InventoryForm({ item, onSubmit, loading }: InventoryForm
         ]}
         error={errors.category}
       />
-      <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} disabled={loading} />
+      <DatePicker label="Date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} disabled={loading} />
       <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} placeholder="e.g. Arabica Beans" disabled={loading} />
       <Input label="Units" value={units} onChange={(e) => setUnits(e.target.value)} error={errors.units} placeholder="e.g. kg, liters, pcs" disabled={loading} />
       <Input label="Quantity" type="number" min="0.01" step="any" value={quantity} onChange={(e) => setQuantity(e.target.value)} error={errors.quantity} disabled={loading} />

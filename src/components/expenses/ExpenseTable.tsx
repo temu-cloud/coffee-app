@@ -8,10 +8,11 @@ import type { DailyExpense } from '@/types'
 interface ExpenseTableProps {
   expenses: DailyExpense[]
   loading?: boolean
+  onEdit?: (expense: DailyExpense) => void
   onDelete: (expense: DailyExpense) => void
 }
 
-export default function ExpenseTable({ expenses, loading, onDelete }: ExpenseTableProps) {
+export default function ExpenseTable({ expenses, loading, onEdit, onDelete }: ExpenseTableProps) {
   const { data: session } = useSession()
   const role = session?.user?.role
   const canManage = role === 'SUPER_ADMIN' || role === 'ADMIN'
@@ -27,7 +28,10 @@ export default function ExpenseTable({ expenses, loading, onDelete }: ExpenseTab
       header: 'Actions',
       render: (row) =>
         canManage ? (
-          <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>Delete</Button>
+          <div className="flex gap-2">
+            {onEdit && <Button size="sm" variant="secondary" onClick={() => onEdit(row)}>Edit</Button>}
+            <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>Delete</Button>
+          </div>
         ) : null,
     },
   ]

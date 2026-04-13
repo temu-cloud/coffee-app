@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import Select from '@/components/ui/Select'  // ← Import custom Select
 import { useQuery } from '@tanstack/react-query'
 import api from '@/services/axios'
+import DatePicker from '@/components/ui/DatePicker'
 import type { DailySale, PriceHistory } from '@/types'
 
 interface SaleFormProps {
@@ -44,6 +46,12 @@ export default function SaleForm({ sale, onSubmit, loading }: SaleFormProps) {
   const profit =
     saleTotal && totalCost ? (Number(saleTotal) - Number(totalCost)).toFixed(2) : ''
 
+  // Convert pricedItems to options format for Select component
+  const itemOptions = pricedItems.map((p) => ({
+    value: p.id,
+    label: `${p.itemName} — ${p.price}/unit`
+  }))
+
   function validate(): boolean {
     const e: FormErrors = {}
     if (!selectedPriceId) e.itemName = 'Please select an item'
@@ -80,21 +88,18 @@ export default function SaleForm({ sale, onSubmit, loading }: SaleFormProps) {
             No items have a price set yet. Go to Prices to add one first.
           </div>
         ) : (
-          <select
+          <Select
             value={selectedPriceId}
-            onChange={(e) => { setSelectedPriceId(e.target.value); setQuantitySold('') }}
-            className="w-full px-3 py-2.5 rounded-lg border border-amber-200 bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+            onChange={(e) => { 
+              setSelectedPriceId(e.target.value)
+              setQuantitySold('')
+            }}
+            options={itemOptions}
+            placeholder="— Select an item —"
             disabled={loading}
-          >
-            <option value="">— Select an item —</option>
-            {pricedItems.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.itemName} — {p.price}/unit
-              </option>
-            ))}
-          </select>
+            error={errors.itemName}
+          />
         )}
-        {errors.itemName && <p className="text-xs text-red-500 mt-1">{errors.itemName}</p>}
       </div>
 
       {/* Cost per unit (read-only) */}
@@ -113,14 +118,14 @@ export default function SaleForm({ sale, onSubmit, loading }: SaleFormProps) {
         )
       )}
 
-      <Input
+      <DatePicker
         label="Date"
-        type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
         error={errors.date}
         disabled={loading}
       />
+
       <Input
         label="Quantity Sold"
         type="number"

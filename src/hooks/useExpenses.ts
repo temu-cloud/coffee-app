@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getExpenses, createExpense, deleteExpense } from '@/services/expenses'
+import { getExpenses, createExpense, deleteExpense, updateExpense } from '@/services/expenses'
 import type { DailyExpense, ExpenseQuery } from '@/types'
 
 export const useExpenses = (params?: ExpenseQuery) =>
@@ -24,6 +24,17 @@ export const useDeleteExpense = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => deleteExpense(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export const useUpdateExpense = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<DailyExpense> }) => updateExpense(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['expenses'] })
       qc.invalidateQueries({ queryKey: ['dashboard'] })

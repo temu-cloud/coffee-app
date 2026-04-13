@@ -1,6 +1,7 @@
 'use client'
 
 import type { PnlReport } from '@/types'
+import DatePicker from '@/components/ui/DatePicker'
 
 interface PnlTableProps {
   from: string
@@ -17,22 +18,23 @@ export default function PnlTable({ from, to, onFromChange, onToChange, data, loa
       {/* Date range picker */}
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-amber-900">From</label>
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => onFromChange(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-amber-200 bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+          
+         <div className="w-44">
+            <DatePicker
+              label="To"
+              value={from}
+              onChange={(e) => onFromChange(e.target.value)}
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-amber-900">To</label>
-          <input
-            type="date"
-            value={to}
-            onChange={(e) => onToChange(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-amber-200 bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+<div className="w-44">
+            <DatePicker
+              label="To"
+              value={to}
+              onChange={(e) => onToChange(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 

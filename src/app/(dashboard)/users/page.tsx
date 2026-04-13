@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/Toast'
 import { useRouter } from 'next/navigation'
 import { FaUserFriends } from 'react-icons/fa'
 import { FiTrash2 } from 'react-icons/fi'
+import Select from '@/components/ui/Select'  // Import your custom Select component
 
 interface StaffUser {
   id: string
@@ -148,16 +149,14 @@ export default function UsersPage() {
                     <p className="text-xs text-amber-500 truncate">{u.email}</p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <select
+                    {/* Custom Select Component */}
+                    <Select
                       value={u.role}
                       disabled={updateRole.isPending}
+                      options={ROLE_OPTIONS}
                       onChange={(e) => updateRole.mutate({ id: u.id, role: e.target.value })}
-                      className="text-xs border border-amber-200 rounded-lg px-2 py-1 text-amber-900 focus:outline-none focus:ring-1 focus:ring-amber-500 bg-white"
-                    >
-                      {ROLE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                                            className="min-w-32"
+                    />
                     {deleteConfirmId === u.id ? (
                       <div className="flex items-center gap-1">
                         <button

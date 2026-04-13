@@ -25,7 +25,7 @@ export default function InventoryTable({ items, loading, onEdit, onDelete, onVie
       key: 'category',
       header: 'Category',
       render: (row) => (
-        <Badge variant={row.category === 'INGREDIENT' ? 'warning' : 'success'}>
+        <Badge    variant={row.category === 'INGREDIENT' ? 'warning' : 'success'}>
           {row.category === 'INGREDIENT' ? 'Ingredient' : 'Finished Good'}
         </Badge>
       ),

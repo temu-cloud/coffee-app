@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
+import DatePicker from '@/components/ui/DatePicker'
 import type { Asset, AssetCondition } from '@/types'
 
 interface AssetFormProps {
@@ -70,7 +71,7 @@ export default function AssetForm({ asset, onSubmit, loading }: AssetFormProps) 
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} placeholder="e.g. Espresso Machine" disabled={loading} />
       <Input label="Category" value={category} onChange={(e) => setCategory(e.target.value)} error={errors.category} placeholder="e.g. Equipment" disabled={loading} />
-      <Input label="Acquisition Date" type="date" value={acquisitionDate} onChange={(e) => setAcquisitionDate(e.target.value)} error={errors.acquisitionDate} disabled={loading} />
+      <DatePicker label="Acquisition Date" value={acquisitionDate} onChange={(e) => setAcquisitionDate(e.target.value)} error={errors.acquisitionDate} disabled={loading} />
       <Input label="Quantity" type="number" min="1" step="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} error={errors.quantity} disabled={loading} />
       <Input label="Unit Cost" type="number" min="0.01" step="any" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} error={errors.unitCost} disabled={loading} />
       <Input label="Total Cost (auto-computed)" value={totalCost} readOnly className="bg-amber-50 cursor-not-allowed" />

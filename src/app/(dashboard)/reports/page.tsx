@@ -5,9 +5,9 @@ import { useReports } from '@/hooks/useReports'
 import UsageChart from '@/components/reports/UsageChart'
 import TopProductsList from '@/components/reports/TopProductsList'
 import SummaryTable from '@/components/reports/SummaryTable'
-import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Skeleton from '@/components/ui/Skeleton'
+import DatePicker from '@/components/ui/DatePicker'  // ← Import DatePicker
 
 function defaultDateRange() {
   const to = new Date()
@@ -34,10 +34,22 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       {/* Date Range Picker */}
-      <div className="bg-white rounded-xl border border-amber-100 shadow-sm p-5">
+       
         <div className="flex flex-wrap gap-3 items-end">
-          <Input label="From" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-          <Input label="To" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          <div className="w-44">
+            <DatePicker
+              label="From"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </div>
+          <div className="w-44">
+            <DatePicker
+              label="To"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </div>
           <Button onClick={applyFilter} disabled={!from || !to}>Apply</Button>
           <Button
             variant="secondary"
@@ -51,7 +63,7 @@ export default function ReportsPage() {
             Last 30 Days
           </Button>
         </div>
-      </div>
+       
 
       {/* Usage Chart */}
       <div className="bg-white rounded-xl border border-amber-100 shadow-sm p-5">
@@ -68,7 +80,11 @@ export default function ReportsPage() {
         <div className="bg-white rounded-xl border border-amber-100 shadow-sm p-5">
           <h2 className="text-base font-semibold text-amber-900 mb-4">Most Used Products</h2>
           {isLoading ? (
-            <Skeleton height="h-6" count={5} className="mb-2" />
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} height="h-6" />
+              ))}
+            </div>
           ) : (
             <TopProductsList products={data?.topProducts ?? []} />
           )}

@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useCostAnalysisReport } from '@/hooks/useReports'
-import Input from '@/components/ui/Input'
 import Skeleton from '@/components/ui/Skeleton'
+import DatePicker from '@/components/ui/DatePicker'
 
 export default function CostAnalysisReportPage() {
   const [from, setFrom] = useState('')
@@ -20,10 +20,18 @@ export default function CostAnalysisReportPage() {
 
       <div className="flex flex-wrap gap-3 items-end">
         <div className="w-44">
-          <Input label="From" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          <DatePicker
+            label="From"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
         </div>
         <div className="w-44">
-          <Input label="To" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          <DatePicker
+            label="To"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
         </div>
       </div>
 

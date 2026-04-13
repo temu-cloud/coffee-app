@@ -37,7 +37,7 @@ export default function PriceTable({ prices, loading, onEdit, onDelete }: PriceT
       render: (row) => {
         const cat = row.category ?? 'OTHER'
         return (
-          <Badge variant={CATEGORY_VARIANTS[cat] ?? 'default'}>
+          <Badge className='flex p-2' variant={CATEGORY_VARIANTS[cat] ?? 'default'}>
             {CATEGORY_LABELS[cat] ?? cat}
           </Badge>
         )

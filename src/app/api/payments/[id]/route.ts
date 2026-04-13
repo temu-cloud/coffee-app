@@ -97,10 +97,6 @@ export async function DELETE(
     const existing = await prisma.payment.findUnique({ where: { id } })
     if (!existing) return Response.json({ error: 'Not found' }, { status: 404 })
 
-    if (existing.executedAt !== null) {
-      return Response.json({ error: 'Cannot delete an already executed payment' }, { status: 409 })
-    }
-
     await prisma.payment.delete({ where: { id } })
     return new Response(null, { status: 204 })
   } catch (e) {

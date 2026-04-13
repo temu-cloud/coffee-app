@@ -37,3 +37,67 @@ select option:checked {
   color: #78350f;
   font-weight: 500;
 }
+@-moz-document url-prefix() {
+  select option {
+    padding: 8px 12px;
+  }
+}
+
+/* Chrome/Safari/Edge specific - improves option appearance */
+select option:focus,
+select option:active {
+  background-color: #fef3c7;
+  color: #78350f;
+}
+/* Minimal cross-browser date input styling */
+input[type="date"] {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  padding-right: 2rem;
+  font-size: 0.875rem;
+  color: #78350f;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+input[type="date"]:focus {
+  outline: none;
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0.5rem;
+  cursor: pointer;
+}
+
+/* Firefox */
+input[type="date"]::-moz-calendar-picker-indicator {
+  position: absolute;
+  right: 0.5rem;
+  cursor: pointer;
+}
+
+/* Position relative for absolute positioning of calendar icon */
+input[type="date"] {
+  position: relative;
+}
+/* DatePicker Calendar Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.absolute.z-50 {
+  animation: fadeIn 0.15s ease-out;
+}

@@ -23,8 +23,8 @@ export default function Table<T extends object>({
   emptyMessage = 'No data found.',
 }: TableProps<T>) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-amber-100 shadow-sm">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-xl border border-amber-100 shadow-sm ">
+      <table className="w-full text-sm  ">
         <thead className="bg-amber-50 border-b border-amber-100">
           <tr>
             {columns.map((col) => (

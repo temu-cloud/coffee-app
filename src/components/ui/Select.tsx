@@ -77,7 +77,8 @@ export default function Select({
 
         {isOpen && (
           <div className="absolute z-50 w-full mt-1 bg-white border border-amber-200 rounded-lg shadow-lg overflow-hidden">
-            <div className="max-h-60 overflow-y-auto py-1">
+            {/* Removed max-h-60 and overflow-y-auto - no scrollbar */}
+            <div className="py-1">
               {placeholder && (
                 <button
                   type="button"

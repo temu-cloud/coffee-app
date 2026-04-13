@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const data = await prisma.priceHistory.findMany({
-      orderBy: { effectiveDate: 'desc' },
+      orderBy: [{ effectiveDate: 'desc' }, { createdAt: 'desc' }],
     })
 
     if (distinct) {

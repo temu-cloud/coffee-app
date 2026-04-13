@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Input from '@/components/ui/Input'
+ 
 import Button from '@/components/ui/Button'
+import DatePicker from '@/components/ui/DatePicker'
 
 interface SaleFiltersProps {
   onFilter: (from: string, to: string) => void
@@ -20,10 +21,10 @@ export default function SaleFilters({ onFilter }: SaleFiltersProps) {
   return (
     <div className="flex flex-wrap gap-3 items-end">
       <div className="w-44">
-        <Input label="From" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+        <DatePicker label="From" value={from} onChange={(e) => setFrom(e.target.value)} />
       </div>
       <div className="w-44">
-        <Input label="To" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        <DatePicker label="To" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
       {(from || to) && (
         <Button variant="ghost" size="sm" onClick={() => { setFrom(''); setTo('') }}>

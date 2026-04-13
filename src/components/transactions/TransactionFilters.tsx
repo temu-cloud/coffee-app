@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
+import DatePicker from '@/components/ui/DatePicker'
 import type { TransactionQuery } from '@/types'
 
 interface TransactionFiltersProps {
@@ -60,10 +61,10 @@ export default function TransactionFilters({ onFilter }: TransactionFiltersProps
         />
       </div>
       <div className="w-40">
-        <Input label="From" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+        <DatePicker label="From" value={from} onChange={(e) => setFrom(e.target.value)} />
       </div>
       <div className="w-40">
-        <Input label="To" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        <DatePicker label="To" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
       {hasFilters && (
         <Button variant="ghost" size="sm" onClick={clear}>Clear</Button>

@@ -5,6 +5,7 @@ import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
 import { computeRecipeCost, RECIPE_NAMES, RECIPE_INGREDIENTS } from '@/lib/recipes'
+import DatePicker from '@/components/ui/DatePicker'
 import type { PriceHistory, InventoryItem, IngredientCost } from '@/types'
 
 type PriceCategory = 'FINISHED_GOOD' | 'RECIPE' | 'OTHER'
@@ -225,9 +226,8 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
         placeholder="e.g. 45.00"
         disabled={loading}
       />
-      <Input
+      <DatePicker
         label="Effective Date"
-        type="date"
         value={effectiveDate}
         onChange={(e) => setEffectiveDate(e.target.value)}
         error={errors.effectiveDate}

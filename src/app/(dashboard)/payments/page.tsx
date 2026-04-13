@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import { useSession } from '@/lib/auth-client'
-import { usePayments, useCreatePayment, useExecutePayment, useDeletePayment } from '@/hooks/usePayments'
+import { usePayments, useCreatePayment, useUpdatePayment, useExecutePayment, useDeletePayment } from '@/hooks/usePayments'
 import PaymentFilters from '@/components/payments/PaymentFilters'
 import PaymentTable from '@/components/payments/PaymentTable'
 import PaymentForm from '@/components/payments/PaymentForm'
@@ -21,12 +21,14 @@ export default function PaymentsPage() {
   const [to, setTo] = useState('')
   const [executed, setExecuted] = useState('')
   const [formOpen, setFormOpen] = useState(false)
+  const [editPayment, setEditPayment] = useState<Payment | null>(null)
   const [executeTarget, setExecuteTarget] = useState<Payment | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Payment | null>(null)
 
   const executedParam = executed === 'true' ? true : executed === 'false' ? false : undefined
   const { data, isLoading } = usePayments({ from: from || undefined, to: to || undefined, executed: executedParam, page: 1, pageSize: 50 })
   const createMutation = useCreatePayment()
+  const updateMutation = useUpdatePayment()
   const executeMutation = useExecutePayment()
   const deleteMutation = useDeletePayment()
 
@@ -34,9 +36,15 @@ export default function PaymentsPage() {
 
   async function handleFormSubmit(data: Partial<Payment>) {
     try {
-      await createMutation.mutateAsync(data)
-      toast('Payment added successfully')
+      if (editPayment) {
+        await updateMutation.mutateAsync({ id: editPayment.id, data })
+        toast('Payment updated successfully')
+      } else {
+        await createMutation.mutateAsync(data)
+        toast('Payment added successfully')
+      }
       setFormOpen(false)
+      setEditPayment(null)
     } catch (e: unknown) {
       toast((e as { message?: string }).message ?? 'Something went wrong', 'error')
     }
@@ -74,9 +82,13 @@ export default function PaymentsPage() {
         {canCreate && <Button onClick={() => setFormOpen(true)}>+ Add Payment</Button>}
       </div>
       <PaymentFilters onFilter={handleFilter} />
-      <PaymentTable payments={data?.data ?? []} loading={isLoading} onExecute={setExecuteTarget} onDelete={setDeleteTarget} />
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Add Payment">
-        <PaymentForm onSubmit={handleFormSubmit} loading={createMutation.isPending} />
+      <PaymentTable payments={data?.data ?? []} loading={isLoading} onEdit={(p) => { setEditPayment(p); setFormOpen(true) }} onExecute={setExecuteTarget} onDelete={setDeleteTarget} />
+      <Modal
+        open={formOpen}
+        onClose={() => { setFormOpen(false); setEditPayment(null) }}
+        title={editPayment ? 'Edit Payment' : 'Add Payment'}
+      >
+        <PaymentForm payment={editPayment} onSubmit={handleFormSubmit} loading={createMutation.isPending || updateMutation.isPending} />
       </Modal>
       <Modal open={!!executeTarget} onClose={() => setExecuteTarget(null)} title="Execute Payment" size="sm">
         <p className="text-amber-800 mb-6">

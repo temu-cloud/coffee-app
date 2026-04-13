@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import DatePicker from '@/components/ui/DatePicker'
 import type { DailyExpense } from '@/types'
 
 interface ExpenseFormProps {
+  expense?: DailyExpense | null
   onSubmit: (data: Partial<DailyExpense>) => Promise<void>
   loading?: boolean
 }
@@ -17,11 +19,11 @@ interface FormErrors {
   unitPrice?: string
 }
 
-export default function ExpenseForm({ onSubmit, loading }: ExpenseFormProps) {
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
-  const [itemName, setItemName] = useState('')
-  const [quantity, setQuantity] = useState('')
-  const [unitPrice, setUnitPrice] = useState('')
+export default function ExpenseForm({ expense, onSubmit, loading }: ExpenseFormProps) {
+  const [date, setDate] = useState(expense?.date?.slice(0, 10) ?? new Date().toISOString().slice(0, 10))
+  const [itemName, setItemName] = useState(expense?.itemName ?? '')
+  const [quantity, setQuantity] = useState(expense?.quantity ?? '')
+  const [unitPrice, setUnitPrice] = useState(expense?.unitPrice ?? '')
   const [errors, setErrors] = useState<FormErrors>({})
 
   const totalPrice =
@@ -54,13 +56,13 @@ export default function ExpenseForm({ onSubmit, loading }: ExpenseFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} disabled={loading} />
+      <DatePicker label="Date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} disabled={loading} />
       <Input label="Item Name" value={itemName} onChange={(e) => setItemName(e.target.value)} error={errors.itemName} placeholder="e.g. Milk" disabled={loading} />
       <Input label="Quantity" type="number" min="0.01" step="any" value={quantity} onChange={(e) => setQuantity(e.target.value)} error={errors.quantity} disabled={loading} />
       <Input label="Unit Price" type="number" min="0.01" step="any" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} error={errors.unitPrice} disabled={loading} />
       <Input label="Total Price (auto-computed)" value={totalPrice} readOnly className="bg-amber-50 cursor-not-allowed" />
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="submit" loading={loading}>Add Expense</Button>
+        <Button type="submit" loading={loading}>{expense ? 'Save Changes' : 'Add Expense'}</Button>
       </div>
     </form>
   )

@@ -9,11 +9,12 @@ import type { Payment } from '@/types'
 interface PaymentTableProps {
   payments: Payment[]
   loading?: boolean
+  onEdit?: (payment: Payment) => void
   onExecute: (payment: Payment) => void
   onDelete: (payment: Payment) => void
 }
 
-export default function PaymentTable({ payments, loading, onExecute, onDelete }: PaymentTableProps) {
+export default function PaymentTable({ payments, loading, onEdit, onExecute, onDelete }: PaymentTableProps) {
   const { data: session } = useSession()
   const role = session?.user?.role
   const canExecute = role === 'SUPER_ADMIN' || role === 'FINANCE_MANAGER'
@@ -44,13 +45,14 @@ export default function PaymentTable({ payments, loading, onExecute, onDelete }:
       header: 'Actions',
       render: (row) =>
         canExecute ? (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {onEdit && (
+              <Button size="sm" variant="secondary" onClick={() => onEdit(row)}>Edit</Button>
+            )}
             {!row.executedAt && (
               <Button size="sm" variant="primary" onClick={() => onExecute(row)}>Execute</Button>
             )}
-            {!row.executedAt && (
-              <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>Delete</Button>
-            )}
+            <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>Delete</Button>
           </div>
         ) : null,
     },
