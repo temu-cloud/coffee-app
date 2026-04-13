@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { itemName, price, effectiveDate } = body
+    const { itemName, price, effectiveDate, category, unitCost, inventoryItemId } = body
 
     if (!itemName || price == null || !effectiveDate) {
       return Response.json(
@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
         itemName,
         price: priceNum,
         effectiveDate: new Date(effectiveDate),
+        category: category ?? 'OTHER',
+        unitCost: unitCost != null ? Number(unitCost) : null,
+        inventoryItemId: inventoryItemId ?? null,
         createdById: session!.user.id,
       },
     })

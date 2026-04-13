@@ -8,6 +8,7 @@ import api from '@/services/axios'
 import type { DailySale, PriceHistory } from '@/types'
 
 interface SaleFormProps {
+  sale?: DailySale | null
   onSubmit: (data: Partial<DailySale>) => Promise<void>
   loading?: boolean
 }
@@ -18,10 +19,10 @@ interface FormErrors {
   quantitySold?: string
 }
 
-export default function SaleForm({ onSubmit, loading }: SaleFormProps) {
-  const [selectedPriceId, setSelectedPriceId] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
-  const [quantitySold, setQuantitySold] = useState('')
+export default function SaleForm({ sale, onSubmit, loading }: SaleFormProps) {
+  const [selectedPriceId, setSelectedPriceId] = useState(sale?.priceHistoryId ?? '')
+  const [date, setDate] = useState(sale?.date?.slice(0, 10) ?? new Date().toISOString().slice(0, 10))
+  const [quantitySold, setQuantitySold] = useState(sale?.quantitySold ?? '')
   const [errors, setErrors] = useState<FormErrors>({})
 
   // Fetch distinct latest price per item name
@@ -33,11 +34,15 @@ export default function SaleForm({ onSubmit, loading }: SaleFormProps) {
 
   const selected = pricedItems.find((p) => p.id === selectedPriceId)
   const unitPrice = selected?.price ?? null
+  const unitCost = selected?.unitCost ?? null
 
+  const qty = Number(quantitySold)
   const saleTotal =
-    unitPrice && quantitySold && !isNaN(Number(quantitySold)) && Number(quantitySold) > 0
-      ? (Number(unitPrice) * Number(quantitySold)).toFixed(2)
-      : ''
+    unitPrice && qty > 0 ? (Number(unitPrice) * qty).toFixed(2) : ''
+  const totalCost =
+    unitCost != null && qty > 0 ? (Number(unitCost) * qty).toFixed(2) : ''
+  const profit =
+    saleTotal && totalCost ? (Number(saleTotal) - Number(totalCost)).toFixed(2) : ''
 
   function validate(): boolean {
     const e: FormErrors = {}
@@ -55,15 +60,19 @@ export default function SaleForm({ onSubmit, loading }: SaleFormProps) {
     await onSubmit({
       itemName: selected!.itemName,
       unitPrice: String(unitPrice),
+      unitCost: unitCost != null ? String(unitCost) : '0',
       date: new Date(date).toISOString(),
       quantitySold,
       saleTotal,
+      totalCost: totalCost || '0',
+      profit: profit || '0',
       priceHistoryId: selectedPriceId,
     })
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Item selector */}
       <div>
         <label className="block text-sm font-medium text-amber-900 mb-1">Item</label>
         {pricedItems.length === 0 ? (
@@ -88,13 +97,30 @@ export default function SaleForm({ onSubmit, loading }: SaleFormProps) {
         {errors.itemName && <p className="text-xs text-red-500 mt-1">{errors.itemName}</p>}
       </div>
 
-      {unitPrice && (
-        <div className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
-          Price: <strong>{unitPrice}</strong> per unit
-        </div>
+      {/* Cost per unit (read-only) */}
+      {selected && (
+        unitCost != null && Number(unitCost) > 0 ? (
+          <Input
+            label="Cost per unit"
+            value={Number(unitCost).toFixed(4)}
+            readOnly
+            className="bg-amber-50 cursor-not-allowed"
+          />
+        ) : (
+          <div className="px-3 py-2 rounded-lg bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+            ⚠ No unit cost recorded for this item — profit will be calculated as 0.
+          </div>
+        )
       )}
 
-      <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} disabled={loading} />
+      <Input
+        label="Date"
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        error={errors.date}
+        disabled={loading}
+      />
       <Input
         label="Quantity Sold"
         type="number"
@@ -105,13 +131,18 @@ export default function SaleForm({ onSubmit, loading }: SaleFormProps) {
         error={errors.quantitySold}
         disabled={loading}
       />
+
+      {/* Summary */}
       {saleTotal && (
-        <div className="px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-sm text-green-800">
-          Sale Total: <strong>{saleTotal}</strong>
+        <div className="rounded-lg bg-green-50 border border-green-200 text-sm text-green-800 px-3 py-2 space-y-1">
+          <div>Sale Total: <strong>{saleTotal}</strong></div>
+          {totalCost && <div>Total Cost: <strong>{totalCost}</strong></div>}
+          {profit && <div>Profit: <strong>{profit}</strong></div>}
         </div>
       )}
+
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="submit" loading={loading}>Record Sale</Button>
+        <Button type="submit" loading={loading}>{sale ? 'Save Changes' : 'Record Sale'}</Button>
       </div>
     </form>
   )

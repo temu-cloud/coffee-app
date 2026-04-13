@@ -95,6 +95,23 @@ export interface InventoryItem {
   deletedById?: string | null
 }
 
+export interface InventoryHistory {
+  id: string
+  inventoryItemId: string
+  date: string
+  quantityAdded: string
+  unitCost: string
+  totalCost: string
+  supplier: string
+  createdAt: string
+  createdById: string
+}
+
+export interface IngredientCost {
+  name: string
+  unitCost: string
+}
+
 export interface SupplyItem {
   id: string
   date: string
@@ -134,6 +151,8 @@ export interface PriceHistory {
   createdAt: string
   createdById: string
   inventoryItemId?: string | null
+  category: string
+  unitCost: string | null
 }
 
 export interface DailySale {
@@ -143,6 +162,9 @@ export interface DailySale {
   unitPrice: string
   quantitySold: string
   saleTotal: string
+  unitCost: string
+  totalCost: string
+  profit: string
   inventoryItemId?: string | null
   priceHistoryId?: string | null
   createdAt: string

@@ -12,3 +12,6 @@ export const createSale = (data: Partial<DailySale>) =>
 
 export const deleteSale = (id: string) =>
   api.delete(`/sales/${id}`)
+
+export const updateSale = (id: string, data: Partial<DailySale>) =>
+  api.put<DailySale>(`/sales/${id}`, data).then((r) => r.data)

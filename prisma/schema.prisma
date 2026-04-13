@@ -6,54 +6,36 @@ datasource db {
   provider = "postgresql"
 }
 
-// ── BetterAuth required models ──────────────────────────────────────────────
-
 model user {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  role          String    @default("NO_ROLE")
-
-  sessions     session[]
-  accounts     account[]
-  transactions Transaction[]
-  permissions  StaffPermission?
-
-  // InventoryItem relations
-  inventoryCreated  InventoryItem[] @relation("InventoryCreatedBy")
-  inventoryUpdated  InventoryItem[] @relation("InventoryUpdatedBy")
-  inventoryDeleted  InventoryItem[] @relation("InventoryDeletedBy")
-
-  // SupplyItem relations
-  supplyCreated     SupplyItem[]    @relation("SupplyCreatedBy")
-  supplyUpdated     SupplyItem[]    @relation("SupplyUpdatedBy")
-
-  // Asset relations
-  assetCreated      Asset[]         @relation("AssetCreatedBy")
-  assetUpdated      Asset[]         @relation("AssetUpdatedBy")
-
-  // PriceHistory relations
-  priceCreated      PriceHistory[]  @relation("PriceCreatedBy")
-
-  // DailySale relations
-  saleCreated       DailySale[]     @relation("SaleCreatedBy")
-  saleUpdated       DailySale[]     @relation("SaleUpdatedBy")
-
-  // DailyExpense relations
-  expenseCreated    DailyExpense[]  @relation("ExpenseCreatedBy")
-  expenseUpdated    DailyExpense[]  @relation("ExpenseUpdatedBy")
-
-  // Payment relations
-  paymentCreated    Payment[]       @relation("PaymentCreatedBy")
-  paymentExecuted   Payment[]       @relation("PaymentExecutedBy")
-
-  // Budget relations
-  budgetCreated     Budget[]        @relation("BudgetCreatedBy")
-  budgetUpdated     Budget[]        @relation("BudgetUpdatedBy")
+  id                      String             @id
+  name                    String
+  email                   String             @unique
+  emailVerified           Boolean
+  image                   String?
+  createdAt               DateTime
+  updatedAt               DateTime
+  role                    String             @default("NO_ROLE")
+  assetCreated            Asset[]            @relation("AssetCreatedBy")
+  assetUpdated            Asset[]            @relation("AssetUpdatedBy")
+  budgetCreated           Budget[]           @relation("BudgetCreatedBy")
+  budgetUpdated           Budget[]           @relation("BudgetUpdatedBy")
+  expenseCreated          DailyExpense[]     @relation("ExpenseCreatedBy")
+  expenseUpdated          DailyExpense[]     @relation("ExpenseUpdatedBy")
+  saleCreated             DailySale[]        @relation("SaleCreatedBy")
+  saleUpdated             DailySale[]        @relation("SaleUpdatedBy")
+  inventoryHistoryCreated InventoryHistory[] @relation("InventoryHistoryCreatedBy")
+  inventoryCreated        InventoryItem[]    @relation("InventoryCreatedBy")
+  inventoryDeleted        InventoryItem[]    @relation("InventoryDeletedBy")
+  inventoryUpdated        InventoryItem[]    @relation("InventoryUpdatedBy")
+  paymentCreated          Payment[]          @relation("PaymentCreatedBy")
+  paymentExecuted         Payment[]          @relation("PaymentExecutedBy")
+  priceCreated            PriceHistory[]     @relation("PriceCreatedBy")
+  permissions             StaffPermission?
+  supplyCreated           SupplyItem[]       @relation("SupplyCreatedBy")
+  supplyUpdated           SupplyItem[]       @relation("SupplyUpdatedBy")
+  transactions            Transaction[]
+  accounts                account[]
+  sessions                session[]
 }
 
 model session {
@@ -73,7 +55,6 @@ model account {
   accountId             String
   providerId            String
   userId                String
-  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -83,6 +64,7 @@ model account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model verification {
@@ -93,8 +75,6 @@ model verification {
   createdAt  DateTime?
   updatedAt  DateTime?
 }
-
-// ── App models ───────────────────────────────────────────────────────────────
 
 model Product {
   id                String        @id @default(cuid())
@@ -117,48 +97,26 @@ model Transaction {
   quantity  Int
   note      String?
   createdAt DateTime        @default(now())
-
-  product Product @relation(fields: [productId], references: [id])
-  user    user    @relation(fields: [userId], references: [id])
+  product   Product         @relation(fields: [productId], references: [id])
+  user      user            @relation(fields: [userId], references: [id])
 
   @@index([productId])
   @@index([createdAt])
 }
 
-enum TransactionType {
-  STOCK_IN
-  STOCK_OUT
-}
-
-// Granular permissions for STAFF users (MANAGERs have all permissions implicitly)
 model StaffPermission {
   id              String  @id @default(cuid())
   userId          String  @unique
-  canAddStock     Boolean @default(true)   // Record STOCK_IN
-  canUseStock     Boolean @default(true)   // Record STOCK_OUT
-  canAddProducts  Boolean @default(false)  // Create products
-  canEditProducts Boolean @default(false)  // Edit products
-  canViewReports  Boolean @default(false)  // Access reports page
-
-  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// ── Damot Coffee Management models ──────────────────────────────────────────
-
-enum ItemCategory {
-  INGREDIENT
-  FINISHED_GOOD
-}
-
-enum AssetCondition {
-  EXCELLENT
-  GOOD
-  FAIR
-  POOR
+  canAddStock     Boolean @default(true)
+  canUseStock     Boolean @default(true)
+  canAddProducts  Boolean @default(false)
+  canEditProducts Boolean @default(false)
+  canViewReports  Boolean @default(false)
+  user            user    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model InventoryItem {
-  id          String       @id @default(cuid())
+  id          String             @id @default(cuid())
   category    ItemCategory
   date        DateTime
   name        String
@@ -168,20 +126,36 @@ model InventoryItem {
   totalCost   Decimal
   supplier    String
   deletedAt   DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   createdById String
   updatedById String?
   deletedById String?
-
-  createdBy user  @relation("InventoryCreatedBy", fields: [createdById], references: [id])
-  updatedBy user? @relation("InventoryUpdatedBy", fields: [updatedById], references: [id])
-  deletedBy user? @relation("InventoryDeletedBy", fields: [deletedById], references: [id])
-  prices    PriceHistory[]
-  sales     DailySale[]
+  sales       DailySale[]
+  history     InventoryHistory[]
+  createdBy   user               @relation("InventoryCreatedBy", fields: [createdById], references: [id])
+  deletedBy   user?              @relation("InventoryDeletedBy", fields: [deletedById], references: [id])
+  updatedBy   user?              @relation("InventoryUpdatedBy", fields: [updatedById], references: [id])
+  prices      PriceHistory[]
 
   @@index([category])
   @@index([deletedAt])
+}
+
+model InventoryHistory {
+  id              String        @id @default(cuid())
+  inventoryItemId String
+  date            DateTime
+  quantityAdded   Decimal
+  unitCost        Decimal
+  totalCost       Decimal
+  supplier        String
+  createdAt       DateTime      @default(now())
+  createdById     String
+  createdBy       user          @relation("InventoryHistoryCreatedBy", fields: [createdById], references: [id])
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@index([inventoryItemId, date])
 }
 
 model SupplyItem {
@@ -197,9 +171,8 @@ model SupplyItem {
   updatedAt   DateTime @updatedAt
   createdById String
   updatedById String?
-
-  createdBy user  @relation("SupplyCreatedBy", fields: [createdById], references: [id])
-  updatedBy user? @relation("SupplyUpdatedBy", fields: [updatedById], references: [id])
+  createdBy   user     @relation("SupplyCreatedBy", fields: [createdById], references: [id])
+  updatedBy   user?    @relation("SupplyUpdatedBy", fields: [updatedById], references: [id])
 }
 
 model Asset {
@@ -216,46 +189,48 @@ model Asset {
   updatedAt       DateTime       @updatedAt
   createdById     String
   updatedById     String?
-
-  createdBy user  @relation("AssetCreatedBy", fields: [createdById], references: [id])
-  updatedBy user? @relation("AssetUpdatedBy", fields: [updatedById], references: [id])
+  createdBy       user           @relation("AssetCreatedBy", fields: [createdById], references: [id])
+  updatedBy       user?          @relation("AssetUpdatedBy", fields: [updatedById], references: [id])
 }
 
 model PriceHistory {
-  id              String   @id @default(cuid())
-  itemName        String                        // free-form item name
+  id              String         @id @default(cuid())
+  itemName        String
   price           Decimal
   effectiveDate   DateTime
-  createdAt       DateTime @default(now())
+  createdAt       DateTime       @default(now())
   createdById     String
-
-  inventoryItemId String?                       // optional link to inventory item
-  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
-  createdBy       user           @relation("PriceCreatedBy", fields: [createdById], references: [id])
+  inventoryItemId String?
+  category        String         @default("OTHER")
+  unitCost        Decimal?
   sales           DailySale[]
+  createdBy       user           @relation("PriceCreatedBy", fields: [createdById], references: [id])
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
 
   @@index([itemName, effectiveDate])
   @@index([inventoryItemId, effectiveDate])
 }
 
 model DailySale {
-  id              String   @id @default(cuid())
+  id              String         @id @default(cuid())
   date            DateTime
-  itemName        String                        // free-form item name
-  unitPrice       Decimal                       // price per unit at time of sale
+  itemName        String
+  unitPrice       Decimal
   quantitySold    Decimal
   saleTotal       Decimal
-  inventoryItemId String?                       // optional — set when selling a priced inventory item
-  priceHistoryId  String?                       // optional — set when selling a priced inventory item
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  inventoryItemId String?
+  priceHistoryId  String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   createdById     String
   updatedById     String?
-
-  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id])
-  priceHistory  PriceHistory?  @relation(fields: [priceHistoryId], references: [id])
-  createdBy     user           @relation("SaleCreatedBy", fields: [createdById], references: [id])
-  updatedBy     user?          @relation("SaleUpdatedBy", fields: [updatedById], references: [id])
+  unitCost        Decimal        @default(0)
+  totalCost       Decimal        @default(0)
+  profit          Decimal        @default(0)
+  createdBy       user           @relation("SaleCreatedBy", fields: [createdById], references: [id])
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  priceHistory    PriceHistory?  @relation(fields: [priceHistoryId], references: [id])
+  updatedBy       user?          @relation("SaleUpdatedBy", fields: [updatedById], references: [id])
 
   @@index([date])
   @@index([inventoryItemId])
@@ -272,9 +247,8 @@ model DailyExpense {
   updatedAt   DateTime @updatedAt
   createdById String
   updatedById String?
-
-  createdBy user  @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
-  updatedBy user? @relation("ExpenseUpdatedBy", fields: [updatedById], references: [id])
+  createdBy   user     @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
+  updatedBy   user?    @relation("ExpenseUpdatedBy", fields: [updatedById], references: [id])
 
   @@index([date])
 }
@@ -291,9 +265,8 @@ model Payment {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   createdById   String
-
-  createdBy  user  @relation("PaymentCreatedBy", fields: [createdById], references: [id])
-  executedBy user? @relation("PaymentExecutedBy", fields: [executedById], references: [id])
+  createdBy     user      @relation("PaymentCreatedBy", fields: [createdById], references: [id])
+  executedBy    user?     @relation("PaymentExecutedBy", fields: [executedById], references: [id])
 
   @@index([date])
 }
@@ -308,10 +281,26 @@ model Budget {
   updatedAt       DateTime @updatedAt
   createdById     String
   updatedById     String?
-
-  createdBy user  @relation("BudgetCreatedBy", fields: [createdById], references: [id])
-  updatedBy user? @relation("BudgetUpdatedBy", fields: [updatedById], references: [id])
+  createdBy       user     @relation("BudgetCreatedBy", fields: [createdById], references: [id])
+  updatedBy       user?    @relation("BudgetUpdatedBy", fields: [updatedById], references: [id])
 
   @@unique([periodMonth, periodYear, category])
   @@index([periodYear, periodMonth])
+}
+
+enum TransactionType {
+  STOCK_IN
+  STOCK_OUT
+}
+
+enum ItemCategory {
+  INGREDIENT
+  FINISHED_GOOD
+}
+
+enum AssetCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
 }

@@ -20,3 +20,20 @@ body {
 * {
   box-sizing: border-box;
 }
+/* Works in some browsers */
+select option {
+  padding: 10px 12px;
+  background-color: #ffffff;
+  color: #78350f;
+}
+
+select option:hover {
+  background-color: #fffbeb;
+  color: #92400e;
+}
+
+select option:checked {
+  background-color: #fef3c7;
+  color: #78350f;
+  font-weight: 500;
+}

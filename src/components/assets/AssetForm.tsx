@@ -39,7 +39,9 @@ export default function AssetForm({ asset, onSubmit, loading }: AssetFormProps) 
   function validate(): boolean {
     const e: FormErrors = {}
     if (!name.trim()) e.name = 'Name is required'
+    else if (/^[0-9]+$/.test(name.trim())) e.name = 'Name must contain letters'
     if (!category.trim()) e.category = 'Category is required'
+    else if (/^[0-9]+$/.test(category.trim())) e.category = 'Category must contain letters'
     if (!acquisitionDate) e.acquisitionDate = 'Acquisition date is required'
     if (!quantity || isNaN(Number(quantity)) || !Number.isInteger(Number(quantity)) || Number(quantity) <= 0)
       e.quantity = 'Quantity must be a positive integer'

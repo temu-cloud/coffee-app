@@ -9,3 +9,9 @@ export const createPrice = (data: Partial<PriceHistory>) =>
 
 export const getPriceHistory = (inventoryItemId: string) =>
   api.get<PriceHistory[]>(`/prices/${inventoryItemId}/history`).then((r) => r.data)
+
+export const updatePrice = (id: string, data: Partial<PriceHistory>) =>
+  api.put<PriceHistory>(`/prices/${id}`, data).then((r) => r.data)
+
+export const deletePrice = (id: string) =>
+  api.delete(`/prices/${id}`)

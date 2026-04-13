@@ -33,6 +33,7 @@ export default function ExpenseForm({ onSubmit, loading }: ExpenseFormProps) {
     const e: FormErrors = {}
     if (!date) e.date = 'Date is required'
     if (!itemName.trim()) e.itemName = 'Item name is required'
+    else if (/^[0-9]+$/.test(itemName.trim())) e.itemName = 'Item name must contain letters'
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) e.quantity = 'Quantity must be > 0'
     if (!unitPrice || isNaN(Number(unitPrice)) || Number(unitPrice) <= 0) e.unitPrice = 'Unit price must be > 0'
     setErrors(e)

@@ -17,6 +17,9 @@ export async function GET(request: NextRequest) {
   const toDate = to ? new Date(to) : new Date()
 
   try {
+    // NOTE: DailySale.totalCost is intentionally excluded from cost analysis.
+    // Sales cost of goods is already captured via InventoryItem purchases above.
+    // Including DailySale.totalCost here would cause double-counting. (Requirement 7.4)
     const [ingredients, finishedGoods, assets, supplies, expenses, payments] = await Promise.all([
       prisma.inventoryItem.aggregate({
         where: { category: 'INGREDIENT', deletedAt: null, date: { gte: fromDate, lte: toDate } },

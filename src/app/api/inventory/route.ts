@@ -64,18 +64,75 @@ export async function POST(request: NextRequest) {
     if (qty <= 0) return Response.json({ error: 'quantity must be greater than 0' }, { status: 400 })
     if (cost <= 0) return Response.json({ error: 'unitCost must be greater than 0' }, { status: 400 })
 
-    const item = await prisma.inventoryItem.create({
-      data: {
-        category: category as ItemCategory,
-        date: new Date(date),
-        name,
-        units,
-        quantity: qty,
-        unitCost: cost,
-        totalCost: qty * cost,
-        supplier,
-        createdById: session!.user.id,
-      },
+    const item = await prisma.$transaction(async (tx) => {
+      const existing = await tx.inventoryItem.findFirst({
+        where: {
+          name: { equals: name, mode: 'insensitive' },
+          category: category as ItemCategory,
+          deletedAt: null,
+        },
+      })
+
+      if (existing) {
+        // Upsert: merge into existing record
+        const newQty = Number(existing.quantity) + qty
+        const newTotal = Number(existing.totalCost) + qty * cost
+        const newUnitCost = newTotal / newQty
+
+        const updated = await tx.inventoryItem.update({
+          where: { id: existing.id },
+          data: {
+            quantity: newQty,
+            unitCost: newUnitCost,
+            totalCost: newTotal,
+            updatedById: session!.user.id,
+            updatedAt: new Date(),
+          },
+        })
+
+        await tx.inventoryHistory.create({
+          data: {
+            inventoryItemId: existing.id,
+            date: new Date(date),
+            quantityAdded: qty,
+            unitCost: cost,
+            totalCost: qty * cost,
+            supplier,
+            createdById: session!.user.id,
+          },
+        })
+
+        return updated
+      } else {
+        // Create new record
+        const created = await tx.inventoryItem.create({
+          data: {
+            category: category as ItemCategory,
+            date: new Date(date),
+            name,
+            units,
+            quantity: qty,
+            unitCost: cost,
+            totalCost: qty * cost,
+            supplier,
+            createdById: session!.user.id,
+          },
+        })
+
+        await tx.inventoryHistory.create({
+          data: {
+            inventoryItemId: created.id,
+            date: new Date(date),
+            quantityAdded: qty,
+            unitCost: cost,
+            totalCost: qty * cost,
+            supplier,
+            createdById: session!.user.id,
+          },
+        })
+
+        return created
+      }
     })
 
     return Response.json(item, { status: 201 })

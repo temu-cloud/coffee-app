@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { itemName, unitPrice, quantitySold, date, inventoryItemId, priceHistoryId } = body
+    const { itemName, unitPrice, quantitySold, date, inventoryItemId, priceHistoryId, unitCost } = body
 
     if (!itemName || unitPrice == null || quantitySold == null || !date) {
       return Response.json(
@@ -61,17 +61,25 @@ export async function POST(request: NextRequest) {
 
     const qty = Number(quantitySold)
     const price = Number(unitPrice)
+    const cost = unitCost != null ? Number(unitCost) : 0
 
     if (qty <= 0) return Response.json({ error: 'quantitySold must be > 0' }, { status: 400 })
     if (price <= 0) return Response.json({ error: 'unitPrice must be > 0' }, { status: 400 })
+
+    const saleTotal = qty * price
+    const totalCost = cost * qty
+    const profit = saleTotal - totalCost
 
     const sale = await prisma.dailySale.create({
       data: {
         date: new Date(date),
         itemName,
         unitPrice: price,
+        unitCost: cost,
         quantitySold: qty,
-        saleTotal: qty * price,
+        saleTotal,
+        totalCost,
+        profit,
         inventoryItemId: inventoryItemId ?? null,
         priceHistoryId: priceHistoryId ?? null,
         createdById: session!.user.id,

@@ -47,7 +47,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
           <h2 className="text-lg font-semibold text-amber-900">{title}</h2>
           <button
             onClick={onClose}
-            className="text-amber-400 hover:text-amber-700 transition-colors text-xl leading-none"
+            className="text-amber-400 hover:text-amber-700 hover:cursor-pointer transition-colors text-xl leading-none cursor-pointer"
             aria-label="Close"
           >
             ✕

@@ -6,6 +6,7 @@ import { useInventoryItems, useCreateInventoryItem, useUpdateInventoryItem, useD
 import InventoryFilters from '@/components/inventory/InventoryFilters'
 import InventoryTable from '@/components/inventory/InventoryTable'
 import InventoryForm from '@/components/inventory/InventoryForm'
+import InventoryHistoryModal from '@/components/inventory/InventoryHistoryModal'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -22,6 +23,7 @@ export default function InventoryPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editItem, setEditItem] = useState<InventoryItem | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
+  const [historyItem, setHistoryItem] = useState<InventoryItem | null>(null)
 
   const { data, isLoading } = useInventoryItems({ search, category: category || undefined, page: 1, pageSize: 50 })
   const createMutation = useCreateInventoryItem()
@@ -90,6 +92,7 @@ export default function InventoryPage() {
         loading={isLoading}
         onEdit={openEdit}
         onDelete={setDeleteTarget}
+        onViewHistory={setHistoryItem}
       />
 
       <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editItem ? 'Edit Item' : 'Add Item'}>
@@ -105,6 +108,12 @@ export default function InventoryPage() {
           <Button variant="destructive" loading={deleteMutation.isPending} onClick={handleDelete}>Delete</Button>
         </div>
       </Modal>
+
+      <InventoryHistoryModal
+        item={historyItem}
+        open={!!historyItem}
+        onClose={() => setHistoryItem(null)}
+      />
     </div>
   )
 }

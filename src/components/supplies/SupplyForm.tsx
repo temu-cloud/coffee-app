@@ -38,7 +38,9 @@ export default function SupplyForm({ item, onSubmit, loading }: SupplyFormProps)
     const e: FormErrors = {}
     if (!date) e.date = 'Date is required'
     if (!name.trim()) e.name = 'Name is required'
+    else if (/^[0-9]+$/.test(name.trim())) e.name = 'Name must contain letters'
     if (!units.trim()) e.units = 'Units is required'
+    else if (/^[0-9]+$/.test(units.trim())) e.units = 'Units must contain letters'
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) e.quantity = 'Quantity must be > 0'
     if (!unitCost || isNaN(Number(unitCost)) || Number(unitCost) <= 0) e.unitCost = 'Unit cost must be > 0'
     if (!supplier.trim()) e.supplier = 'Supplier is required'

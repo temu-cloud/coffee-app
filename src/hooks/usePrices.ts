@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getPrices, getPriceHistory, createPrice } from '@/services/prices'
+import { getPrices, getPriceHistory, createPrice, updatePrice, deletePrice } from '@/services/prices'
 import type { PriceHistory } from '@/types'
 
 export const usePrices = (params?: Record<string, unknown>) =>
@@ -25,5 +25,21 @@ export const useCreatePrice = () => {
       qc.invalidateQueries({ queryKey: ['prices'] })
       qc.invalidateQueries({ queryKey: ['sales'] })
     },
+  })
+}
+
+export const useUpdatePrice = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<PriceHistory> }) => updatePrice(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['prices'] }),
+  })
+}
+
+export const useDeletePrice = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deletePrice(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['prices'] }),
   })
 }
