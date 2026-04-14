@@ -298,3 +298,13 @@ export interface DashboardStatsV2 extends DashboardStats {
   pendingPaymentsCount: number
   pendingPaymentsTotal: string
 }
+
+export interface StockMovement {
+  id: string
+  itemName: string
+  quantityAdded: string
+  quantitySold: string
+  quantityRemaining: string
+  createdAt: string
+  updatedAt: string
+}

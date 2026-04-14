@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Button from '@/components/ui/Button'
@@ -41,54 +41,94 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
   // Recipe state
   const [selectedRecipe, setSelectedRecipe] = useState('')
   const [ingredientCosts, setIngredientCosts] = useState<Record<string, number>>({})
-  const [missingIngredients, setMissingIngredients] = useState<string[]>([])
+
+  // Compute missing ingredients directly
+  const missingIngredients = useMemo(() => {
+    if (category !== 'RECIPE' || !selectedRecipe) return []
+    const required = RECIPE_INGREDIENTS[selectedRecipe as keyof typeof RECIPE_INGREDIENTS] ?? []
+    return required.filter((ing) => !(ing.toLowerCase() in ingredientCosts))
+  }, [category, selectedRecipe, ingredientCosts])
+
+  // Compute recipe unit cost directly
+  const computedRecipeCost = useMemo(() => {
+    if (category !== 'RECIPE' || !selectedRecipe) return null
+    return computeRecipeCost(selectedRecipe, ingredientCosts)
+  }, [category, selectedRecipe, ingredientCosts])
+
+  // Derive display values directly from state - no useEffect needed!
+  const displayItemName = useMemo(() => {
+    if (category === 'RECIPE' && selectedRecipe) {
+      return selectedRecipe
+    }
+    if (category === 'FINISHED_GOOD' && selectedFgId) {
+      const fg = finishedGoods.find((f) => f.id === selectedFgId)
+      return fg?.name ?? itemName
+    }
+    return itemName
+  }, [category, selectedRecipe, selectedFgId, finishedGoods, itemName])
+
+  const displayUnitCost = useMemo(() => {
+    if (category === 'RECIPE' && computedRecipeCost !== null) {
+      return computedRecipeCost.toFixed(4)
+    }
+    if (category === 'FINISHED_GOOD' && selectedFgId) {
+      const fg = finishedGoods.find((f) => f.id === selectedFgId)
+      return fg?.unitCost ?? unitCost
+    }
+    return unitCost
+  }, [category, computedRecipeCost, selectedFgId, finishedGoods, unitCost])
 
   // Fetch finished goods when category = FINISHED_GOOD
   useEffect(() => {
     if (category !== 'FINISHED_GOOD') return
+    
+    let isMounted = true
     fetch('/api/inventory?category=FINISHED_GOOD&pageSize=100')
       .then((r) => r.json())
-      .then((d) => setFinishedGoods(Array.isArray(d.data) ? d.data : []))
-      .catch(() => setFinishedGoods([]))
+      .then((d) => {
+        if (isMounted) {
+          setFinishedGoods(Array.isArray(d.data) ? d.data : [])
+        }
+      })
+      .catch(() => {
+        if (isMounted) setFinishedGoods([])
+      })
+    
+    return () => { isMounted = false }
   }, [category])
 
   // Fetch ingredient costs when category = RECIPE
   useEffect(() => {
     if (category !== 'RECIPE') return
+    
+    let isMounted = true
     fetch('/api/inventory/ingredient-costs')
       .then((r) => r.json())
       .then((data: IngredientCost[]) => {
-        const map: Record<string, number> = {}
-        if (Array.isArray(data)) {
-          data.forEach((ic) => { map[ic.name.toLowerCase()] = Number(ic.unitCost) })
+        if (isMounted) {
+          const map: Record<string, number> = {}
+          if (Array.isArray(data)) {
+            data.forEach((ic) => { map[ic.name.toLowerCase()] = Number(ic.unitCost) })
+          }
+          setIngredientCosts(map)
         }
-        setIngredientCosts(map)
       })
-      .catch(() => setIngredientCosts({}))
+      .catch(() => {
+        if (isMounted) setIngredientCosts({})
+      })
+    
+    return () => { isMounted = false }
   }, [category])
 
-  // Auto-compute unit cost when recipe changes
-  useEffect(() => {
-    if (category !== 'RECIPE' || !selectedRecipe) return
-    const computed = computeRecipeCost(selectedRecipe, ingredientCosts)
-    setUnitCost(computed.toFixed(4))
-    setItemName(selectedRecipe)
-
-    // Check for missing ingredients
-    const required = RECIPE_INGREDIENTS[selectedRecipe as keyof typeof RECIPE_INGREDIENTS] ?? []
-    const missing = required.filter((ing) => !(ing.toLowerCase() in ingredientCosts))
-    setMissingIngredients(missing)
-  }, [selectedRecipe, ingredientCosts, category])
-
-  // Auto-populate unit cost when finished good selected
-  function handleFgSelect(id: string) {
+  // Handle finished good selection - now updates both selectedId and display values directly
+  const handleFgSelect = useCallback((id: string) => {
     setSelectedFgId(id)
     const fg = finishedGoods.find((f) => f.id === id)
     if (fg) {
-      setItemName(fg.name)
-      setUnitCost(fg.unitCost)
+      // Don't set itemName/unitCost here - use derived values instead
+      // They will be derived from selectedFgId in the useMemo hooks
     }
-  }
+  }, [finishedGoods])
 
   function validate(): boolean {
     const e: FormErrors = {}
@@ -100,9 +140,9 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
     } else if (category === 'RECIPE') {
       if (!selectedRecipe) e.itemName = 'Please select a recipe'
     } else {
-      if (!itemName.trim()) e.itemName = 'Item name is required'
-      else if (/^[0-9]+$/.test(itemName.trim())) e.itemName = 'Item name must contain letters'
-      if (!unitCost || isNaN(Number(unitCost)) || Number(unitCost) < 0) e.unitCost = 'Unit cost must be a valid number'
+      if (!displayItemName.trim()) e.itemName = 'Item name is required'
+      else if (/^[0-9]+$/.test(displayItemName.trim())) e.itemName = 'Item name must contain letters'
+      if (!displayUnitCost || isNaN(Number(displayUnitCost)) || Number(displayUnitCost) < 0) e.unitCost = 'Unit cost must be a valid number'
     }
 
     if (!price || isNaN(Number(price)) || Number(price) <= 0) e.price = 'Price must be > 0'
@@ -114,13 +154,22 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
     e.preventDefault()
     if (!validate()) return
     await onSubmit({
-      itemName: itemName.trim(),
+      itemName: displayItemName.trim(),
       price,
       effectiveDate: new Date(effectiveDate).toISOString(),
       category,
-      unitCost: unitCost !== '' ? unitCost : null,
+      unitCost: displayUnitCost !== '' ? displayUnitCost : null,
       inventoryItemId: category === 'FINISHED_GOOD' ? selectedFgId : undefined,
     })
+  }
+
+  // Reset form fields when category changes
+  const handleCategoryChange = (e: { target: { value: string } }) => {
+    const newCategory = e.target.value as PriceCategory
+    setCategory(newCategory)
+    setSelectedFgId('')
+    setSelectedRecipe('')
+    setErrors({})
   }
 
   return (
@@ -129,15 +178,7 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
       <Select
         label="Category"
         value={category}
-        onChange={(e) => {
-          setCategory(e.target.value as PriceCategory)
-          setItemName('')
-          setUnitCost('')
-          setSelectedFgId('')
-          setSelectedRecipe('')
-          setMissingIngredients([])
-          setErrors({})
-        }}
+        onChange={handleCategoryChange}
         options={[
           { value: 'FINISHED_GOOD', label: 'Finished Good' },
           { value: 'RECIPE', label: 'Recipe' },
@@ -159,8 +200,8 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
             error={errors.itemName}
             disabled={loading}
           />
-          {unitCost && (
-            <Input label="Unit Cost (from inventory)" value={unitCost} readOnly className="bg-amber-50 cursor-not-allowed" />
+          {displayUnitCost && (
+            <Input label="Unit Cost (from inventory)" value={displayUnitCost} readOnly className="bg-amber-50 cursor-not-allowed" />
           )}
         </>
       )}
@@ -182,8 +223,13 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
               ⚠ Missing ingredients (cost treated as 0): {missingIngredients.join(', ')}
             </p>
           )}
-          {unitCost && (
-            <Input label="Computed Unit Cost" value={unitCost} readOnly className="bg-amber-50 cursor-not-allowed" />
+          {computedRecipeCost !== null && (
+            <Input 
+              label="Computed Unit Cost" 
+              value={computedRecipeCost.toFixed(4)} 
+              readOnly 
+              className="bg-amber-50 cursor-not-allowed" 
+            />
           )}
         </>
       )}
@@ -193,7 +239,7 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
         <>
           <Input
             label="Item Name"
-            value={itemName}
+            value={displayItemName}
             onChange={(e) => setItemName(e.target.value)}
             error={errors.itemName}
             placeholder="e.g. Takeaway Cup"
@@ -205,7 +251,7 @@ export default function PriceForm({ item, onSubmit, loading }: PriceFormProps) {
             type="number"
             min="0"
             step="any"
-            value={unitCost}
+            value={displayUnitCost}
             onChange={(e) => setUnitCost(e.target.value)}
             error={errors.unitCost}
             placeholder="e.g. 5.00"

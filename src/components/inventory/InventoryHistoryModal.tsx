@@ -16,7 +16,10 @@ export default function InventoryHistoryModal({ item, open, onClose }: Inventory
 
   useEffect(() => {
     if (!open || !item) return
+    
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
+    
     fetch(`/api/inventory/${item.id}/history`)
       .then((r) => r.json())
       .then((data) => setHistory(Array.isArray(data) ? data : []))

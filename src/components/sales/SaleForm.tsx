@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
-import Select from '@/components/ui/Select'  // ← Import custom Select
+import Select from '@/components/ui/Select'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/services/axios'
 import DatePicker from '@/components/ui/DatePicker'
-import type { DailySale, PriceHistory } from '@/types'
+import type { DailySale, PriceHistory, StockMovement } from '@/types'
+import { RECIPE_DEDUCTIONS } from '@/lib/stockMovement'
 
 interface SaleFormProps {
   sale?: DailySale | null
@@ -38,7 +39,36 @@ export default function SaleForm({ sale, onSubmit, loading }: SaleFormProps) {
   const unitPrice = selected?.price ?? null
   const unitCost = selected?.unitCost ?? null
 
+  // Fetch all stock movements to check availability
+  const { data: stockMovements = [] } = useQuery<StockMovement[]>({
+    queryKey: ['stock-movements'],
+    queryFn: () => api.get<StockMovement[]>('/stock-movements').then((r) => r.data),
+    staleTime: 30_000,
+  })
+
+  // Compute available stock for the selected item
+  function getAvailableStock(itemName: string): number {
+    const key = itemName.toLowerCase()
+    const deductions = RECIPE_DEDUCTIONS[key]
+    if (deductions) {
+      // Recipe: find the limiting ingredient
+      let minServings = Infinity
+      for (const [ingredient, perUnit] of deductions) {
+        const sm = stockMovements.find((s) => s.itemName === ingredient)
+        const remaining = sm ? Number(sm.quantityRemaining) : 0
+        const servings = perUnit > 0 ? remaining / perUnit : Infinity
+        if (servings < minServings) minServings = servings
+      }
+      return minServings === Infinity ? 0 : Math.floor(minServings * 1000) / 1000
+    } else {
+      const sm = stockMovements.find((s) => s.itemName === key)
+      return sm ? Number(sm.quantityRemaining) : 0
+    }
+  }
+
+  const availableStock = selected ? getAvailableStock(selected.itemName) : null
   const qty = Number(quantitySold)
+  const isOverStock = availableStock !== null && qty > 0 && qty > availableStock
   const saleTotal =
     unitPrice && qty > 0 ? (Number(unitPrice) * qty).toFixed(2) : ''
   const totalCost =
@@ -58,6 +88,8 @@ export default function SaleForm({ sale, onSubmit, loading }: SaleFormProps) {
     if (!date) e.date = 'Date is required'
     if (!quantitySold || isNaN(Number(quantitySold)) || Number(quantitySold) <= 0)
       e.quantitySold = 'Quantity must be > 0'
+    else if (isOverStock)
+      e.quantitySold = `Insufficient stock. Available: ${availableStock?.toFixed(3)}`
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -101,6 +133,15 @@ export default function SaleForm({ sale, onSubmit, loading }: SaleFormProps) {
           />
         )}
       </div>
+
+      {/* Stock availability */}
+      {selected && availableStock !== null && (
+        <div className={`px-3 py-2 rounded-lg border text-sm ${availableStock <= 0 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+          {availableStock <= 0
+            ? `⛔ Out of stock — ${selected.itemName} has no remaining stock`
+            : `📦 Available stock: ${availableStock.toFixed(3)}`}
+        </div>
+      )}
 
       {/* Cost per unit (read-only) */}
       {selected && (
@@ -147,7 +188,9 @@ export default function SaleForm({ sale, onSubmit, loading }: SaleFormProps) {
       )}
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="submit" loading={loading}>{sale ? 'Save Changes' : 'Record Sale'}</Button>
+        <Button type="submit" loading={loading} disabled={isOverStock || (availableStock !== null && availableStock <= 0)}>
+          {sale ? 'Save Changes' : 'Record Sale'}
+        </Button>
       </div>
     </form>
   )

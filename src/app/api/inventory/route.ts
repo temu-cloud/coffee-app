@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireSession, requireRole } from '@/lib/api-auth'
 import { ItemCategory } from '@prisma/client'
+import { addToStock } from '@/lib/stockMovement'
 
 export async function GET(request: NextRequest) {
   const { session, error } = await requireSession()
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
-        orderBy: [{ date: 'desc' }, { name: 'asc' }],
+        orderBy: { createdAt: 'desc' },
       }),
       prisma.inventoryItem.count({ where }),
     ])
@@ -102,6 +103,7 @@ export async function POST(request: NextRequest) {
           },
         })
 
+        await addToStock(tx, name, qty)
         return updated
       } else {
         // Create new record
@@ -131,6 +133,7 @@ export async function POST(request: NextRequest) {
           },
         })
 
+        await addToStock(tx, name, qty)
         return created
       }
     })

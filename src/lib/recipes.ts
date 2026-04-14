@@ -50,7 +50,7 @@ export function computeRecipeCost(
       return (c('coffee bean') / 1000) * 11.11111 + (c('sugar') / 1000) * 10
 
     case 'Normal Tea':
-      return (c('tea powder') / 900) * 10 + (c('sugar') / 1000) * 20
+      return (c('tea powder') / 100) * 10 + (c('sugar') / 1000) * 20
 
     case 'Race Tea':
       return (c('race powder') / 1000) * 66.66667 + (c('sugar') / 1000) * 10

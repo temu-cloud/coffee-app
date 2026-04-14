@@ -304,3 +304,15 @@ enum AssetCondition {
   FAIR
   POOR
 }
+
+model StockMovement {
+  id                String   @id @default(cuid())
+  itemName          String   @unique
+  quantityAdded     Decimal  @default(0)
+  quantitySold      Decimal  @default(0)
+  quantityRemaining Decimal  @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([itemName])
+}

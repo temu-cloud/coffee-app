@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireSession, requireRole } from '@/lib/api-auth'
+import { deductFromStock, RECIPE_DEDUCTIONS } from '@/lib/stockMovement'
 
 export async function GET(request: NextRequest) {
   const { session, error } = await requireSession()
@@ -66,6 +67,36 @@ export async function POST(request: NextRequest) {
     if (qty <= 0) return Response.json({ error: 'quantitySold must be > 0' }, { status: 400 })
     if (price <= 0) return Response.json({ error: 'unitPrice must be > 0' }, { status: 400 })
 
+    // ── Stock availability check ──────────────────────────────────────────
+    const recipeKey = itemName.toLowerCase()
+    const deductions = RECIPE_DEDUCTIONS[recipeKey]
+
+    if (deductions) {
+      // Recipe: check each ingredient has enough remaining stock
+      for (const [ingredient, perUnit] of deductions) {
+        const needed = perUnit * qty
+        const stock = await prisma.stockMovement.findUnique({ where: { itemName: ingredient } })
+        const remaining = stock ? Number(stock.quantityRemaining) : 0
+        if (remaining < needed) {
+          return Response.json(
+            { error: `Insufficient stock for ingredient "${ingredient}". Available: ${remaining.toFixed(3)}, needed: ${needed.toFixed(3)}` },
+            { status: 422 }
+          )
+        }
+      }
+    } else {
+      // Finished good: check item stock directly
+      const stock = await prisma.stockMovement.findUnique({ where: { itemName: itemName.toLowerCase() } })
+      const remaining = stock ? Number(stock.quantityRemaining) : 0
+      if (remaining < qty) {
+        return Response.json(
+          { error: `Insufficient stock for "${itemName}". Available: ${remaining.toFixed(3)}, needed: ${qty}` },
+          { status: 422 }
+        )
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     const saleTotal = qty * price
     const totalCost = cost * qty
     const profit = saleTotal - totalCost
@@ -85,6 +116,17 @@ export async function POST(request: NextRequest) {
         createdById: session!.user.id,
       },
     })
+
+    // Update stock movement
+    const recipeKey2 = itemName.toLowerCase()
+    const deductions2 = RECIPE_DEDUCTIONS[recipeKey2]
+    if (deductions2) {
+      for (const [ingredient, perUnit] of deductions2) {
+        await deductFromStock(prisma, ingredient, perUnit * qty)
+      }
+    } else {
+      await deductFromStock(prisma, itemName, qty)
+    }
 
     return Response.json(sale, { status: 201 })
   } catch (e) {
