@@ -1,5 +1,4 @@
 import { requireSession } from '@/lib/api-auth'
-import prisma from '@/lib/prisma'
 
 export async function GET() {
   const { session, error } = await requireSession()
@@ -40,20 +39,12 @@ export async function GET() {
     })
   }
 
-  // Legacy STAFF fallback — check StaffPermission table
-  try {
-    const perms = await prisma.staffPermission.findUnique({
-      where: { userId: session.user.id },
-    })
-    return Response.json(perms ?? {
-      canAddStock: true,
-      canUseStock: true,
-      canAddProducts: false,
-      canEditProducts: false,
-      canViewReports: false,
-    })
-  } catch (e) {
-    console.error(e)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
-  }
+  // NO_ROLE or unknown — minimal permissions
+  return Response.json({
+    canAddStock: false,
+    canUseStock: false,
+    canAddProducts: false,
+    canEditProducts: false,
+    canViewReports: false,
+  })
 }
