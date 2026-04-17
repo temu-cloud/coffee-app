@@ -43,9 +43,9 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo / Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-800 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4">
             <Image
-              src="/newlogo.png"
+              src="/dammote.png"
               alt="Coffee Icon"
               className="w-10 h-10 object-contain"
               width={40}
@@ -98,7 +98,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-800 hover:bg-amber-900 disabled:bg-amber-400 text-white font-semibold py-2.5 rounded-lg transition-colors duration-200"
+              className="w-full bg-amber-800 hover:bg-amber-900 disabled:bg-amber-400 text-white font-semibold py-2.5 rounded-lg transition-colors cursor-pointer duration-200"
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>

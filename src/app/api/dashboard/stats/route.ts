@@ -1,7 +1,7 @@
 import { requireSession } from '@/lib/api-auth'
 import prisma from '@/lib/prisma'
 
-const LOW_STOCK_THRESHOLD = 10
+const LOW_STOCK_THRESHOLD = 5
 
 export async function GET() {
   const { error } = await requireSession()
@@ -15,7 +15,8 @@ export async function GET() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
 
     const [
-      allInventoryItems,
+      lowStockMovements,
+      allStockMovements,
       last7DaysSales,
       todaySalesAgg,
       todayExpensesAgg,
@@ -24,12 +25,14 @@ export async function GET() {
       todaySupplyCostAgg,
       pendingPaymentsAgg,
     ] = await Promise.all([
-      prisma.inventoryItem.findMany({
-        where: { deletedAt: null, category: 'INGREDIENT' },
-        select: { id: true, name: true, quantity: true },
+      // Low stock: items with remaining < threshold from StockMovement
+      prisma.stockMovement.findMany({
+        where: { quantityRemaining: { lt: LOW_STOCK_THRESHOLD } },
+        orderBy: { quantityRemaining: 'asc' },
       }),
+      prisma.stockMovement.count(),
       prisma.dailySale.findMany({
-        where: { date: { gte: sevenDaysAgo } },
+        where: { date: { gte: sevenDaysAgo, lt: todayEnd } },
         select: { quantitySold: true, date: true },
       }),
       prisma.dailySale.aggregate({
@@ -59,29 +62,32 @@ export async function GET() {
       }),
     ])
 
-    // Aggregate quantity per ingredient name for low-stock
-    const stockByName: Record<string, { id: string; name: string; stock: number }> = {}
-    for (const item of allInventoryItems) {
-      if (!stockByName[item.name]) {
-        stockByName[item.name] = { id: item.id, name: item.name, stock: 0 }
-      }
-      stockByName[item.name].stock += Number(item.quantity)
-    }
+    // Map low stock movements to the shape LowStockTable expects
+    const lowStockProducts = lowStockMovements.map((sm) => ({
+      id: sm.id,
+      name: sm.itemName,
+      stock: Number(sm.quantityRemaining),
+      lowStockThreshold: LOW_STOCK_THRESHOLD,
+    }))
 
-    const allAggregated = Object.values(stockByName)
-    const lowStockProducts = allAggregated
-      .filter((p) => p.stock < LOW_STOCK_THRESHOLD)
-      .map((p) => ({ ...p, lowStockThreshold: LOW_STOCK_THRESHOLD }))
-
-    // 7-day usage chart from sales
+    // 7-day usage chart from sales — use local date strings to avoid timezone mismatch
     const dailyMap: Record<string, number> = {}
     for (let i = 0; i < 7; i++) {
-      const d = new Date(sevenDaysAgo)
-      d.setDate(d.getDate() + i)
-      dailyMap[d.toISOString().slice(0, 10)] = 0
+      const d = new Date(todayStart)
+      d.setDate(d.getDate() - (6 - i))
+      // Format as YYYY-MM-DD in local time
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      dailyMap[`${y}-${m}-${day}`] = 0
     }
     for (const sale of last7DaysSales) {
-      const key = new Date(sale.date).toISOString().slice(0, 10)
+      // Convert stored UTC date to local date string
+      const localDate = new Date(sale.date)
+      const y = localDate.getFullYear()
+      const m = String(localDate.getMonth() + 1).padStart(2, '0')
+      const day = String(localDate.getDate()).padStart(2, '0')
+      const key = `${y}-${m}-${day}`
       if (key in dailyMap) dailyMap[key] += Number(sale.quantitySold)
     }
     const dailyUsage = Object.entries(dailyMap).map(([date, quantity]) => ({ date, quantity }))
@@ -95,7 +101,7 @@ export async function GET() {
     const todayProfit = todayRevenue - todayCosts
 
     return Response.json({
-      totalProducts: allAggregated.length,
+      totalProducts: allStockMovements,
       lowStockCount: lowStockProducts.length,
       todayStockOut: 0,
       todayStockIn: 0,

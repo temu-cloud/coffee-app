@@ -30,10 +30,8 @@ model user {
   paymentCreated          Payment[]          @relation("PaymentCreatedBy")
   paymentExecuted         Payment[]          @relation("PaymentExecutedBy")
   priceCreated            PriceHistory[]     @relation("PriceCreatedBy")
-  permissions             StaffPermission?
   supplyCreated           SupplyItem[]       @relation("SupplyCreatedBy")
   supplyUpdated           SupplyItem[]       @relation("SupplyUpdatedBy")
-  transactions            Transaction[]
   accounts                account[]
   sessions                session[]
 }
@@ -74,45 +72,6 @@ model verification {
   expiresAt  DateTime
   createdAt  DateTime?
   updatedAt  DateTime?
-}
-
-model Product {
-  id                String        @id @default(cuid())
-  name              String
-  category          String
-  unit              String
-  stock             Int           @default(0)
-  lowStockThreshold Int           @default(10)
-  imageUrl          String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  transactions      Transaction[]
-}
-
-model Transaction {
-  id        String          @id @default(cuid())
-  productId String
-  userId    String
-  type      TransactionType
-  quantity  Int
-  note      String?
-  createdAt DateTime        @default(now())
-  product   Product         @relation(fields: [productId], references: [id])
-  user      user            @relation(fields: [userId], references: [id])
-
-  @@index([productId])
-  @@index([createdAt])
-}
-
-model StaffPermission {
-  id              String  @id @default(cuid())
-  userId          String  @unique
-  canAddStock     Boolean @default(true)
-  canUseStock     Boolean @default(true)
-  canAddProducts  Boolean @default(false)
-  canEditProducts Boolean @default(false)
-  canViewReports  Boolean @default(false)
-  user            user    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model InventoryItem {
@@ -286,11 +245,6 @@ model Budget {
 
   @@unique([periodMonth, periodYear, category])
   @@index([periodYear, periodMonth])
-}
-
-enum TransactionType {
-  STOCK_IN
-  STOCK_OUT
 }
 
 enum ItemCategory {

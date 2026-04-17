@@ -11,7 +11,7 @@ export async function GET(_request: NextRequest) {
 
   try {
     const data = await prisma.stockMovement.findMany({
-      orderBy: { itemName: 'asc' },
+      orderBy: { updatedAt: 'desc' },
     })
     return Response.json(data)
   } catch (e) {

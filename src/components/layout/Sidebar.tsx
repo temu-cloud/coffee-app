@@ -102,7 +102,7 @@ function SidebarContent({ onClose, collapsed = false }: SidebarContentProps) {
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shrink-0">
-              <Image src="/newlogo.png" alt="Damot Coffee Logo" width={40} height={40} className="h-5 w-5 object-contain" />
+              <Image src="/dammote.png" alt="Damot Coffee Logo" width={40} height={40} className="h-7 w-7 object-contain" />
             </div>
             <div>
               <p className="text-white font-bold text-sm leading-tight">Damot Coffee</p>

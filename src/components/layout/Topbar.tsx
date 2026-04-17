@@ -60,7 +60,7 @@ export default function Topbar() {
           aria-label="Stock movement notifications"
         >
           <FiBell className="w-5 h-5 text-amber-700" />
-          <span className={`absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 ${outOfStockCount > 0 ? 'bg-red-500' : 'bg-amber-400'}`}>
+          <span className={`absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 ${outOfStockCount > 0 ? 'bg-red-500' : 'bg-amber-400'}`}>
             {outOfStockCount > 99 ? '99+' : outOfStockCount}
           </span>
         </button>
@@ -68,7 +68,7 @@ export default function Topbar() {
         {/* Right: logo */}
         <div className="flex items-center gap-2 text-amber-600 text-sm">
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <Image src="/newlogo.png" alt="Damot Coffee" className="w-5 h-5 object-contain" width={40} height={40} />
+            <Image src="/dammote.png" alt="Damot Coffee" className="w-10 h-10 object-contain" width={40} height={40} />
           </div>
           <span className="hidden sm:inline text-amber-700">Good day!</span>
         </div>
