@@ -17,46 +17,68 @@ export async function GET(request: NextRequest) {
   const toDate = to ? new Date(to) : new Date()
 
   try {
-    // NOTE: DailySale.totalCost is intentionally excluded from cost analysis.
-    // Sales cost of goods is already captured via InventoryItem purchases above.
-    // Including DailySale.totalCost here would cause double-counting. (Requirement 7.4)
     const [ingredients, finishedGoods, assets, supplies, expenses, payments] = await Promise.all([
-      prisma.inventoryItem.aggregate({
+      prisma.inventoryItem.findMany({
         where: { category: 'INGREDIENT', deletedAt: null, date: { gte: fromDate, lte: toDate } },
-        _sum: { totalCost: true },
+        select: { date: true, totalCost: true },
       }),
-      prisma.inventoryItem.aggregate({
+      prisma.inventoryItem.findMany({
         where: { category: 'FINISHED_GOOD', deletedAt: null, date: { gte: fromDate, lte: toDate } },
-        _sum: { totalCost: true },
+        select: { date: true, totalCost: true },
       }),
-      prisma.asset.aggregate({
+      prisma.asset.findMany({
         where: { acquisitionDate: { gte: fromDate, lte: toDate } },
-        _sum: { totalCost: true },
+        select: { acquisitionDate: true, totalCost: true },
       }),
-      prisma.supplyItem.aggregate({
+      prisma.supplyItem.findMany({
         where: { date: { gte: fromDate, lte: toDate } },
-        _sum: { totalCost: true },
+        select: { date: true, totalCost: true },
       }),
-      prisma.dailyExpense.aggregate({
+      prisma.dailyExpense.findMany({
         where: { date: { gte: fromDate, lte: toDate } },
-        _sum: { totalPrice: true },
+        select: { date: true, totalPrice: true },
       }),
-      prisma.payment.aggregate({
+      prisma.payment.findMany({
         where: { date: { gte: fromDate, lte: toDate }, executedAt: { not: null } },
-        _sum: { amount: true },
+        select: { date: true, amount: true },
       }),
     ])
 
-    const data = [
-      { category: 'Inventory — Ingredients', totalCost: Number(ingredients._sum.totalCost ?? 0).toFixed(2) },
-      { category: 'Inventory — Finished Goods', totalCost: Number(finishedGoods._sum.totalCost ?? 0).toFixed(2) },
-      { category: 'Assets', totalCost: Number(assets._sum.totalCost ?? 0).toFixed(2) },
-      { category: 'Supplies', totalCost: Number(supplies._sum.totalCost ?? 0).toFixed(2) },
-      { category: 'Expenses', totalCost: Number(expenses._sum.totalPrice ?? 0).toFixed(2) },
-      { category: 'Payments', totalCost: Number(payments._sum.amount ?? 0).toFixed(2) },
-    ].filter((row) => Number(row.totalCost) > 0)
+    // Build date → category → total map
+    type DayMap = Record<string, Record<string, number>>
+    const dayMap: DayMap = {}
+    const getKey = (d: Date) => d.toISOString().slice(0, 10)
 
-    return Response.json(data)
+    const add = (date: Date, category: string, cost: number) => {
+      const key = getKey(date)
+      if (!dayMap[key]) dayMap[key] = {}
+      dayMap[key][category] = (dayMap[key][category] ?? 0) + cost
+    }
+
+    for (const r of ingredients) add(r.date, 'Ingredients', Number(r.totalCost))
+    for (const r of finishedGoods) add(r.date, 'Finished Goods', Number(r.totalCost))
+    for (const r of assets) add(r.acquisitionDate, 'Assets', Number(r.totalCost))
+    for (const r of supplies) add(r.date, 'Supplies', Number(r.totalCost))
+    for (const r of expenses) add(r.date, 'Expenses', Number(r.totalPrice))
+    for (const r of payments) add(r.date, 'Payments', Number(r.amount))
+
+    // Also return aggregated totals for the table (backward-compatible)
+    const totals: Record<string, number> = {}
+    for (const cats of Object.values(dayMap)) {
+      for (const [cat, val] of Object.entries(cats)) {
+        totals[cat] = (totals[cat] ?? 0) + val
+      }
+    }
+
+    const summary = Object.entries(totals)
+      .map(([category, total]) => ({ category, totalCost: total.toFixed(2) }))
+      .filter((r) => Number(r.totalCost) > 0)
+
+    const daily = Object.entries(dayMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, cats]) => ({ date, ...Object.fromEntries(Object.entries(cats).map(([k, v]) => [k, v])) }))
+
+    return Response.json({ summary, daily })
   } catch (e) {
     console.error(e)
     return Response.json({ error: 'Internal server error' }, { status: 500 })

@@ -286,10 +286,10 @@ export type SalesVolumeReport = Array<{
   quantitySold: string
 }>
 
-export type CostAnalysisReport = Array<{
-  category: string
-  totalCost: string
-}>
+export interface CostAnalysisReport {
+  summary: Array<{ category: string; totalCost: string }>
+  daily: Array<{ date: string } & Record<string, number>>
+}
 
 export interface DashboardStatsV2 extends DashboardStats {
   todayRevenue: string

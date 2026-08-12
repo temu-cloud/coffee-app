@@ -2,6 +2,16 @@
 
 import type { PnlReport } from '@/types'
 import DatePicker from '@/components/ui/DatePicker'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 
 interface PnlTableProps {
   from: string
@@ -37,6 +47,33 @@ export default function PnlTable({ from, to, onFromChange, onToChange, data, loa
           </div>
         </div>
       </div>
+
+      {/* Line Chart */}
+      {data && data.dailyBreakdown.length > 0 && (
+        <div className="bg-white rounded-xl border border-amber-100 shadow-sm p-5">
+          <h3 className="text-base font-semibold text-amber-900 mb-4">P&amp;L Trend</h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart
+              data={data.dailyBreakdown.map((row) => ({
+                date: new Date(row.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                Revenue: Number(row.revenue),
+                Costs: Number(row.costs),
+                Profit: Number(row.profit),
+              }))}
+              margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#fde68a" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#92400e' }} />
+              <YAxis tick={{ fontSize: 11, fill: '#92400e' }} />
+              <Tooltip contentStyle={{ background: '#fff', border: '1px solid #fde68a', borderRadius: 8 }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Line type="monotone" dataKey="Revenue" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="Costs" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              <Line type="monotone" dataKey="Profit" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (

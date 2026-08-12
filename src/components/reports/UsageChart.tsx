@@ -1,8 +1,8 @@
 'use client'
 
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -13,17 +13,14 @@ import {
 import type { DailyUsageEntry } from '@/services/reports'
 import type { SalesVolumeReport } from '@/types'
 
-// Legacy usage entry format
 type LegacyEntry = DailyUsageEntry
-
-// New sales-volume format
 type SalesVolumeEntry = { date: string; itemName: string; quantitySold: string }
 
 interface UsageChartProps {
   data: LegacyEntry[] | SalesVolumeReport
 }
 
-const COLORS = ['#92400e', '#b45309', '#d97706', '#f59e0b', '#fbbf24', '#fcd34d', '#fde68a']
+const COLORS = ['#92400e', '#b45309', '#d97706', '#f59e0b', '#fbbf24', '#10b981', '#6366f1']
 
 function isSalesVolumeEntry(entry: LegacyEntry | SalesVolumeEntry): entry is SalesVolumeEntry {
   return 'itemName' in entry && 'quantitySold' in entry
@@ -38,7 +35,6 @@ export default function UsageChart({ data }: UsageChartProps) {
     )
   }
 
-  // Pivot: date → { name: qty }
   const dateMap: Record<string, Record<string, number>> = {}
   const names = new Set<string>()
 
@@ -67,16 +63,24 @@ export default function UsageChart({ data }: UsageChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+      <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#fde68a" />
         <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#92400e' }} />
         <YAxis tick={{ fontSize: 11, fill: '#92400e' }} allowDecimals={false} />
         <Tooltip contentStyle={{ background: '#fff', border: '1px solid #fde68a', borderRadius: 8 }} />
         <Legend wrapperStyle={{ fontSize: 11 }} />
         {nameList.map((name, i) => (
-          <Bar key={name} dataKey={name} fill={COLORS[i % COLORS.length]} radius={[3, 3, 0, 0]} />
+          <Line
+            key={name}
+            type="monotone"
+            dataKey={name}
+            stroke={COLORS[i % COLORS.length]}
+            strokeWidth={2}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
+          />
         ))}
-      </BarChart>
+      </LineChart>
     </ResponsiveContainer>
   )
 }
